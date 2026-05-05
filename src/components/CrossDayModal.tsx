@@ -24,6 +24,11 @@ export function CrossDayModal() {
   if (!crossDayPromptShown) return null;
 
   function handleStartFresh() {
+    // Phase 2: dispose the audio engine BEFORE clearSession so the OS mic
+    // indicator releases. The bridge is registered by MicPanel on mount.
+    // @ts-expect-error — runtime bridge
+    const dispose = window.__noisiumDisposeEngine as (() => void) | undefined;
+    dispose?.();
     clearSession();
     setCrossDayPromptShown(false);
   }
