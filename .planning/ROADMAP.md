@@ -7,7 +7,7 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 ## Phases
 
 - [x] **Phase 1: Scaffold + State Layer** - Vite/React scaffold, Zustand store, localStorage persistence with session-date guard, HTTPS guard, deployment
-- [ ] **Phase 2: Audio Pipeline** - AGC-disabled getUserMedia, AudioContext on user gesture, AnalyserNode, real-time level indicator, mic error states
+- [x] **Phase 2: Audio Pipeline** - AGC-disabled getUserMedia, AudioContext on user gesture, AnalyserNode, real-time level indicator, mic error states
 - [ ] **Phase 3: Calibration + Measurement + Show Control** - Demo list setup, ambient baseline calibration, countdown-to-measurement, average dB scoring, skip/redo, private host scores
 - [ ] **Phase 4: Two-Surface Architecture** - BroadcastChannel bridge, projector URL/view, suspense screen, winner-only reveal, projector styling, tab reconnect
 
@@ -37,12 +37,12 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   2. `track.getSettings()` confirms `autoGainControl: false`, `echoCancellation: false`, `noiseSuppression: false` after stream creation
   3. Denying mic permission shows a clear on-screen error with recovery instructions — not a blank screen or JS exception
   4. A real-time level indicator on the host view moves in response to sound (clapping, speaking) confirming the pipeline is live
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 - [x] 02-01-PLAN.md — Vitest infrastructure + browser detection + AGC verification + RMS math (pure-function units)
 - [x] 02-02-PLAN.md — AudioEngine class (AGC-disabled getUserMedia, AudioContext-on-gesture, AnalyserNode rAF loop, error mapping) + unit tests
 - [x] 02-03-PLAN.md — Store extension (transient mic fields), useAudioEngine hook, permission-loss wiring helper
-- [ ] 02-04-PLAN.md — MicPanel UI (Enable / Error / Live cards), 12-cell VU bar, device picker, HostView integration, CrossDayModal engine teardown
-- [ ] 02-05-PLAN.md — Manual verification checkpoint across Chrome/Edge + Firefox + phone, with cross-browser recovery-copy and OS-mic-indicator checks
+- [x] 02-04-PLAN.md — MicPanel UI (Enable / Error / Live cards), 12-cell VU bar, device picker, HostView integration, CrossDayModal engine teardown
+- [x] 02-05-PLAN.md — Manual verification checkpoint across Chrome/Edge + Firefox + phone, with cross-browser recovery-copy and OS-mic-indicator checks
 
 ### Phase 3: Calibration + Measurement + Show Control
 **Goal**: The host can run a complete calibrate-then-measure cycle for all demos, with each demo's score captured fairly as a delta above the ambient baseline, and skip/redo controls available throughout.
@@ -54,7 +54,13 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   3. If the AudioContext loses `'running'` state or the mic device changes during measurement, the capture aborts and a visible warning appears — no silent bad reading is stored
   4. The host sees each demo's captured score privately after measurement completes
   5. The host can skip a demo (marked excluded) or redo a measurement with a brief confirmation; skipped and redone demos behave correctly in subsequent logic
-**Plans**: TBD
+**Plans:** 6 plans (planned 2026-05-05)
+- [ ] 03-01-PLAN.md (Wave 1) — Pure-function measurement.ts module + Phase 2 partialize-test update (Wave 0 foundation)
+- [ ] 03-02-PLAN.md (Wave 2, parallel with 03-03) — Store extension: Phase 3 fields/actions, partialize update, clearSession extension
+- [ ] 03-03-PLAN.md (Wave 2, parallel with 03-02) — AudioEngine.startMeasurement + calibrate methods + tests
+- [ ] 03-04-PLAN.md (Wave 3, parallel with 03-05) — DemoListEditor + DemoCard + DemoStatusBadge components
+- [ ] 03-05-PLAN.md (Wave 3, parallel with 03-04) — CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator
+- [ ] 03-06-PLAN.md (Wave 4) — HostView wiring + manual verification checkpoint
 
 ### Phase 4: Two-Surface Architecture
 **Goal**: The projector tab shows the right screen for each show state — suspense during measurement, blank/between between demos, winner-only at the end — and the host's raw scores are never visible on the projector at any point.
@@ -73,6 +79,6 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold + State Layer | 3/3 | Complete    | 2026-05-05 |
-| 2. Audio Pipeline | 3/5 | In Progress | - |
-| 3. Calibration + Measurement + Show Control | 0/TBD | Not started | - |
+| 2. Audio Pipeline | 5/5 | Complete    | 2026-05-05 |
+| 3. Calibration + Measurement + Show Control | 0/6 | Planned     | -          |
 | 4. Two-Surface Architecture | 0/TBD | Not started | - |

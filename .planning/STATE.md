@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-05-05T19:57:30.000Z"
-last_activity: 2026-05-05 — Phase 2 Plan 3 complete (store mic extension + wirePermissionLoss + useAudioEngine hook, 54 tests green)
+status: verifying
+stopped_at: Completed 03-03-PLAN.md (AudioEngine startMeasurement + calibrate — 6 new TDD tests, 104 total green)
+last_updated: "2026-05-05T22:00:04.588Z"
+last_activity: 2026-05-05 — Phase 2 Plan 5 complete (manual verification checkpoint approved — AGC confirmed, level indicator live, browser-specific error copy verified)
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 8
-  completed_plans: 6
-  percent: 38
+  completed_phases: 2
+  total_plans: 14
+  completed_plans: 11
+  percent: 50
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-05)
 
 ## Current Position
 
-Phase: 2 of 4 (Audio Pipeline) — IN PROGRESS
-Plan: 3 of 5 in current phase (3 done, 2 remaining)
-Status: Plan 02-03 complete — store mic extension + permissionLoss helper + useAudioEngine hook shipped
-Last activity: 2026-05-05 — Phase 2 Plan 3 complete (store mic extension + wirePermissionLoss + useAudioEngine hook, 54 tests green)
+Phase: 2 of 4 (Audio Pipeline) — COMPLETE
+Plan: 5 of 5 in current phase (5 done, 0 remaining)
+Status: Plan 02-05 complete — manual verification checkpoint approved, all four ROADMAP success criteria confirmed PASS
+Last activity: 2026-05-05 — Phase 2 Plan 5 complete (manual verification checkpoint approved — AGC confirmed, level indicator live, browser-specific error copy verified)
 
-Progress: [####░░░░░░] 38%
+Progress: [#####░░░░░] 50%
 
 ## Performance Metrics
 
@@ -56,6 +56,10 @@ Progress: [####░░░░░░] 38%
 | Phase 02-audio-pipeline P01 | 3min | 3 tasks | 10 files |
 | Phase 02-audio-pipeline P02 | 4min | 2 tasks | 2 files |
 | Phase 02-audio-pipeline P03 | 3min | 3 tasks | 5 files |
+| Phase 02-audio-pipeline P04 | 2min | 2 tasks | 8 files |
+| Phase 03-calibration-measurement-show-control P01 | 2min | 3 tasks | 3 files |
+| Phase 03-calibration-measurement-show-control P02 | 4 | 2 tasks | 2 files |
+| Phase 03-calibration-measurement-show-control P03 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -86,6 +90,14 @@ Recent decisions affecting current work:
 - [Phase 02-audio-pipeline P03]: wirePermissionLoss is async (returns Promise<() => void>) — permissions.query is async; cleanup captures PermissionStatus object
 - [Phase 02-audio-pipeline P03]: useAudioEngine uses empty dep array with eslint-disable — Zustand setters are module-stable; including them in deps is a false-positive
 - [Phase 02-audio-pipeline P03]: clearSession() resets mic fields without touching engine — MicPanel useEffect (Plan 02-04) handles engine teardown by watching micPermission === 'idle'
+- [Phase 02-audio-pipeline]: window.__noisiumDisposeEngine bridge for CrossDayModal engine teardown — avoids coupling Zustand to runtime AudioEngine instances
+- [Phase 02-audio-pipeline]: getLevelRef.current pattern for stable rAF getter — prevents LevelIndicator rAF loop restart on every parent re-render
+- [Phase 02-audio-pipeline]: All mic-panel leaf components are props-only (no store/engine imports) — orchestration lives entirely in MicPanel
+- [Phase 03-calibration-measurement-show-control]: measurement.ts centralizes all Phase 3 math as pure functions — no React, no Web Audio, no Zustand; fully testable in jsdom; single source of truth for dbFsFromRms, computeDelta, getNormalizedScore, getDemoStatus
+- [Phase 03-calibration-measurement-show-control]: partialize-invariant test updated in Wave 0 (03-01) before store extension (03-02) — intentionally RED test pre-declares Phase 3 storage contract; as-any cast is pragmatic bridge removed by 03-02
+- [Phase 03-calibration-measurement-show-control]: moveDemo uses up/down direction enum rather than reorderDemos full-array swap — fits planned arrow-button UI in 03-04 without requiring UI to reconstruct full reordered array
+- [Phase 03-calibration-measurement-show-control]: confirmRedo does NOT call startMeasure — calling component (03-05) owns sequencing; abortReasonToMessage at module scope is single source of truth for abort copy; completeMeasure removes demo from skippedDemoIds (measured demo supersedes skip)
+- [Phase 03-calibration-measurement-show-control]: setInterval(33ms) for measurement sampling (not rAF) — avoids frame contention with existing VU loop; addEventListener('statechange') not onstatechange= — additive, preserves future Phase 2 wiring; performance.now() for wall-clock window boundary; dbFsFromRms imported from measurement.ts only
 
 ### Pending Todos
 
@@ -98,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-05T19:57:30.000Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-05-05T22:00:04.585Z
+Stopped at: Completed 03-03-PLAN.md (AudioEngine startMeasurement + calibrate — 6 new TDD tests, 104 total green)
 Resume file: None
