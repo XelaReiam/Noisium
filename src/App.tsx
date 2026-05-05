@@ -1,7 +1,17 @@
+import { createHashRouter, RouterProvider } from 'react-router-dom';
+import { HostView } from './components/HostView';
+import { ProjectorPlaceholder } from './components/ProjectorPlaceholder';
+import { SecureContextBlocker } from './components/SecureContextBlocker';
+
+const router = createHashRouter([
+  { path: '/', element: <HostView /> },
+  { path: '/projector', element: <ProjectorPlaceholder /> },
+]);
+
 export function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <h1 className="text-3xl font-semibold text-gray-900">Noisium</h1>
-    </div>
+    <SecureContextBlocker>
+      <RouterProvider router={router} />
+    </SecureContextBlocker>
   );
 }
