@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { useAudioEngine } from '../hooks/useAudioEngine';
+import { useAudioEngine, resetAudioEngine } from '../hooks/useAudioEngine';
 import { wirePermissionLoss } from '../lib/permissionLoss';
 import { MicEnableCard } from './MicEnableCard';
 import { MicErrorCard } from './MicErrorCard';
@@ -88,10 +88,12 @@ export function MicPanel() {
 
   // Cross-day "Start fresh" handler tears down the engine. We register a
   // window-level callback the modal can invoke. Cleaner than coupling the
-  // store to engine instances.
+  // store to engine instances. resetAudioEngine() disposes the singleton
+  // AND clears its module-level slot so the next useAudioEngine() call
+  // builds a fresh instance.
   useEffect(() => {
     const dispose = (): void => {
-      engineRef.current?.dispose();
+      resetAudioEngine();
     };
     // @ts-expect-error — attaching to window for a single cross-component bridge
     window.__noisiumDisposeEngine = dispose;

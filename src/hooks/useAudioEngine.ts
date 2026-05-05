@@ -1,47 +1,62 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { AudioEngine } from '../lib/audioEngine';
 import { useAppStore } from '../store/useAppStore';
 
 /**
- * React hook that owns a single AudioEngine instance per host tab.
+ * Module-level singleton: ONE AudioEngine per host tab, shared across all
+ * components that call useAudioEngine().
+ *
+ * Why module-level (not per-hook useRef): multiple components consume the
+ * engine (MicPanel, CalibrateButton, MeasurementOrchestrator). Per-component
+ * refs would create N engines fighting over the mic — only the first to call
+ * requestPermission would be ready; the others throw "AudioEngine not ready".
  *
  * Lifecycle:
- *   - On first mount: construct AudioEngine. Constructor does NOT touch
- *     AudioContext (CAL-03 — context is created later inside the user
- *     gesture handler that calls engineRef.current.requestPermission()).
- *   - The engine's status callback is wired to Zustand setters so any UI
- *     that subscribes to micPermission / micDeviceId / audioReady
- *     re-renders automatically.
- *   - On unmount: dispose. AudioEngine.dispose() is idempotent so StrictMode
- *     double-mount in dev (mount → unmount → mount) is safe.
+ *   - First call to useAudioEngine() constructs the AudioEngine. Constructor
+ *     does NOT touch AudioContext (CAL-03 — context is created inside the
+ *     user-gesture handler that calls requestPermission()).
+ *   - All subsequent calls return the same instance.
+ *   - The engine lives for the full tab lifetime. There is no programmatic
+ *     dispose path; the only "teardown" is via window.__noisiumDisposeEngine
+ *     (registered by MicPanel) which CrossDayModal calls on "Start fresh".
+ *     That handler creates a fresh engine via __noisiumResetEngine below.
  *
- * Returns a ref pointing to the engine. Consumers call methods on
- * engineRef.current — they NEVER read currentLevel through React state
- * (that lives on the class instance and is read by LevelIndicator's own rAF).
+ * Status callback uses useAppStore.setState directly — module scope can't
+ * read React selectors, so we use the imperative store API. Functionally
+ * identical to setMicPermission/setMicDeviceId/setAudioReady actions.
  */
-export function useAudioEngine() {
-  const setMicPermission = useAppStore((s) => s.setMicPermission);
-  const setMicDeviceId = useAppStore((s) => s.setMicDeviceId);
-  const setAudioReady = useAppStore((s) => s.setAudioReady);
+let sharedEngine: AudioEngine | null = null;
 
-  const engineRef = useRef<AudioEngine | null>(null);
-
-  useEffect(() => {
-    const engine = new AudioEngine((status) => {
-      setMicPermission(status.permission);
-      setMicDeviceId(status.deviceId);
-      setAudioReady(status.audioReady);
+function ensureEngine(): AudioEngine {
+  if (!sharedEngine) {
+    sharedEngine = new AudioEngine((status) => {
+      useAppStore.setState({
+        micPermission: status.permission,
+        micDeviceId: status.deviceId,
+        audioReady: status.audioReady,
+      });
     });
-    engineRef.current = engine;
+  }
+  return sharedEngine;
+}
 
-    return () => {
-      // StrictMode dev double-mount: dispose runs on first unmount, second
-      // mount creates a fresh engine. AudioEngine.dispose is idempotent.
-      engine.dispose();
-      engineRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // setters are store-stable; one-time mount lifecycle
+/**
+ * Disposes the current engine and lets the next useAudioEngine() call build
+ * a fresh one. Used by CrossDayModal's "Start fresh" path so the OS mic
+ * indicator is released and any subsequent grant is treated as a clean start.
+ */
+export function resetAudioEngine() {
+  if (sharedEngine) {
+    sharedEngine.dispose();
+    sharedEngine = null;
+  }
+}
 
+export function useAudioEngine() {
+  // ensureEngine is safe to call during render — it's idempotent and side
+  // effects (constructing the class, attaching the status callback) happen
+  // exactly once across all consumers.
+  const engineRef = useRef<AudioEngine | null>(null);
+  if (!engineRef.current) engineRef.current = ensureEngine();
   return engineRef;
 }
