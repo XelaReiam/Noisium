@@ -1,5 +1,6 @@
 import { verifyAgcConstraints } from './agcVerify';
 import { computeRms } from './rms';
+import { dbFsFromRms } from './measurement';
 
 export type MicPermission =
   | 'idle'        // No request made yet — show "Enable microphone" card
@@ -15,6 +16,24 @@ export interface EngineStatus {
   deviceLabel: string | null;
   audioReady: boolean;
 }
+
+/** Reason a measurement window aborted before completing. */
+export type MeasurementAbortReason = 'state-change' | 'device-change' | 'manual';
+
+/**
+ * Result of AudioEngine.startMeasurement(). Discriminated union — `aborted: false`
+ * carries the captured average; `aborted: true` carries the cause.
+ *
+ * NOTE: 'device-change' is reserved for future engine-side device-change detection.
+ * Currently `startMeasurement` only produces 'state-change' and 'manual' reasons —
+ * 'device-change' is detected by the React-side MeasurementAbortGuard component
+ * (Plan 03-05) which calls `signal.abort()` on the AbortController, producing a
+ * 'manual' reason from the engine's perspective. The store maps the React-side
+ * call to its own 'device-change' reason. See RESEARCH Pattern 10.
+ */
+export type MeasurementResult =
+  | { aborted: false; avgDbFs: number; durationMs: number }
+  | { aborted: true; reason: MeasurementAbortReason };
 
 type StatusCallback = (status: EngineStatus) => void;
 
@@ -201,6 +220,106 @@ export class AudioEngine {
 
   getCurrentLevel(): number {
     return this.currentLevel;
+  }
+
+  /**
+   * Run a fixed-duration measurement window. Resolves with the average dBFS
+   * across the window, or an aborted result if the AudioContext leaves 'running'
+   * or the AbortSignal fires.
+   *
+   * Sampling: setInterval at ~30 Hz, parallel to the existing rAF VU loop.
+   * Both read the same AnalyserNode — reads are non-destructive.
+   *
+   * Window boundary: wall-clock via performance.now(), NOT sample count.
+   * Sample rate varies by device (Windows usually 48000, macOS 44100, etc.) so
+   * a sample-count window would yield slightly different durations per device.
+   *
+   * @param windowSeconds  Duration of capture (e.g. 3 for calibration, 5/8/10 for measurement)
+   * @param signal         Optional AbortSignal — abort() resolves the promise with reason: 'manual'
+   */
+  async startMeasurement(
+    windowSeconds: number,
+    signal?: AbortSignal,
+  ): Promise<MeasurementResult> {
+    if (!this.analyser || !this.floatBuffer) {
+      throw new Error('[Noisium] AudioEngine not ready — call requestPermission first');
+    }
+    if (this.ctx && this.ctx.state !== 'running') {
+      await this.ctx.resume();
+    }
+    // Capture refs locally for the closure — they cannot be reassigned mid-window
+    // because requestPermission rebuilds them, which would only happen if the user
+    // clicked Enable mic mid-measurement (impossible — UI is disabled during measurement).
+    const ctx = this.ctx;
+    const analyser = this.analyser;
+    const buffer = this.floatBuffer;
+
+    return new Promise<MeasurementResult>((resolve) => {
+      const samples: number[] = [];
+      const startMs = performance.now();
+      const targetMs = windowSeconds * 1000;
+      let finished = false;
+
+      const finish = (result: MeasurementResult): void => {
+        if (finished) return;
+        finished = true;
+        clearInterval(intervalId);
+        ctx?.removeEventListener('statechange', onStateChange);
+        signal?.removeEventListener('abort', onAbort);
+        resolve(result);
+      };
+
+      // Sampling tick — ~30 Hz independent of frame rate
+      const intervalId = setInterval(() => {
+        if (finished) return;
+        analyser.getFloatTimeDomainData(buffer);
+        const rms = computeRms(buffer);
+        samples.push(dbFsFromRms(rms));
+        if (performance.now() - startMs >= targetMs) {
+          const avg =
+            samples.length > 0
+              ? samples.reduce((a, b) => a + b, 0) / samples.length
+              : -100; // defensive — should never happen for windowSeconds > 0
+          finish({
+            aborted: false,
+            avgDbFs: avg,
+            durationMs: performance.now() - startMs,
+          });
+        }
+      }, 33);
+
+      // AudioContext state-change abort observer.
+      // Use addEventListener (NOT onstatechange =) — future-proofs against any
+      // Phase 2 patch that might assign onstatechange for markLost wiring. RESEARCH Pitfall 2.
+      const onStateChange = (): void => {
+        if (ctx && ctx.state !== 'running') {
+          finish({ aborted: true, reason: 'state-change' });
+        }
+      };
+      ctx?.addEventListener('statechange', onStateChange);
+
+      // External abort signal — Plan 03-05's MeasurementAbortGuard fires this
+      // when navigator.mediaDevices.devicechange detects the active mic disappeared.
+      const onAbort = (): void => finish({ aborted: true, reason: 'manual' });
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
+  }
+
+  /**
+   * Capture a 3-second ambient baseline. Thin wrapper around startMeasurement(3).
+   * Throws if aborted — calibration has no Retry semantics; the host clicks
+   * "Calibrate room" again to retry.
+   *
+   * The 3→2→1 countdown UI lives in the calling component, NOT here. The engine
+   * just runs the actual capture window when called. Per CONTEXT decision: the
+   * countdown is host-UI timing.
+   */
+  async calibrate(signal?: AbortSignal): Promise<{ ambientDbFs: number }> {
+    const result = await this.startMeasurement(3, signal);
+    if (result.aborted) {
+      throw new Error('Calibration aborted');
+    }
+    return { ambientDbFs: result.avgDbFs };
   }
 
   private _stopStream(): void {

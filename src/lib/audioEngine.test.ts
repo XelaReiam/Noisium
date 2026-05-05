@@ -486,11 +486,15 @@ describe('AudioEngine.calibrate (CAL-01)', () => {
     try {
       const engine = await grantedEngine();
       const controller = new AbortController();
+      // Attach a noop catch immediately so the rejection does not go unhandled
+      // while we advance fake timers before the assertion runs.
       const promise = engine.calibrate(controller.signal);
+      const caught = promise.catch(() => {});
 
       await vi.advanceTimersByTimeAsync(100);
       controller.abort();
       await vi.advanceTimersByTimeAsync(50);
+      await caught;
 
       await expect(promise).rejects.toThrow(/Calibration aborted/);
     } finally {

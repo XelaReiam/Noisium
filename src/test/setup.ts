@@ -7,6 +7,8 @@ class MockAudioContext {
   destination = {} as AudioDestinationNode;
   resume = vi.fn().mockResolvedValue(undefined);
   close = vi.fn().mockResolvedValue(undefined);
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
   createMediaStreamSource = vi.fn().mockImplementation(() => ({
     connect: vi.fn(),
   }));
