@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AudioEngine, type EngineStatus } from './audioEngine';
+import { AudioEngine, type EngineStatus, type MeasurementResult } from './audioEngine';
 
 // -- Helpers ----
 
@@ -319,5 +319,182 @@ describe('AudioEngine — additional robustness', () => {
     const engine = new AudioEngine(record);
     await engine.requestPermission();
     expect(resumeMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ============================================================
+// Phase 3 Plan 03-03 — startMeasurement + calibrate tests
+// ============================================================
+
+describe('AudioEngine.startMeasurement (MEAS-02 / MEAS-04)', () => {
+  // Helper: bring engine to 'granted' state so analyser/floatBuffer exist.
+  async function grantedEngine() {
+    const track = makeFakeTrack();
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockResolvedValue(
+      makeFakeStream(track),
+    );
+    const engine = new AudioEngine(record);
+    await engine.requestPermission();
+    return engine;
+  }
+
+  it('throws if analyser is not ready (no permission grant yet)', async () => {
+    const engine = new AudioEngine(record);
+    await expect(engine.startMeasurement(1)).rejects.toThrow(/not ready/i);
+  });
+
+  it('resolves with { aborted: false, avgDbFs, durationMs } after the window ends', async () => {
+    vi.useFakeTimers();
+    try {
+      const engine = await grantedEngine();
+      const promise = engine.startMeasurement(1);
+
+      // Advance past the window (1000ms) — Vitest fake timers also mock
+      // performance.now() since v1.6, so the wall-clock check works.
+      await vi.advanceTimersByTimeAsync(1100);
+
+      const result = (await promise) as MeasurementResult;
+      expect(result.aborted).toBe(false);
+      if (result.aborted === false) {
+        expect(typeof result.avgDbFs).toBe('number');
+        expect(Number.isFinite(result.avgDbFs)).toBe(true);
+        // Mocked analyser's getFloatTimeDomainData does nothing — buffer stays zeros.
+        // computeRms(zeros) = 0, dbFsFromRms(0) = -100 (the floor).
+        expect(result.avgDbFs).toBe(-100);
+        expect(result.durationMs).toBeGreaterThanOrEqual(1000);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('aborts with reason "state-change" when audioContext leaves running mid-window', async () => {
+    // Use a custom AudioContext whose addEventListener captures the statechange handler.
+    let capturedStateChangeHandler: (() => void) | null = null;
+    let fakeCtxInstance: FakeAudioContext | null = null;
+
+    class FakeAudioContext {
+      state: AudioContextState = 'running';
+      sampleRate = 48000;
+      destination = {} as AudioDestinationNode;
+      resume = vi.fn().mockResolvedValue(undefined);
+      close = vi.fn().mockResolvedValue(undefined);
+      addEventListener = vi.fn((event: string, handler: () => void) => {
+        if (event === 'statechange') capturedStateChangeHandler = handler;
+      });
+      removeEventListener = vi.fn();
+      createMediaStreamSource = vi.fn().mockImplementation(() => ({ connect: vi.fn() }));
+      createAnalyser = vi.fn().mockImplementation(() => ({
+        fftSize: 2048,
+        smoothingTimeConstant: 0,
+        getFloatTimeDomainData: vi.fn(),
+        connect: vi.fn(),
+      }));
+      createGain = vi.fn().mockImplementation(() => ({
+        gain: { value: 0 },
+        connect: vi.fn(),
+      }));
+      constructor() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        fakeCtxInstance = this;
+      }
+    }
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+
+    const track = makeFakeTrack();
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockResolvedValue(
+      makeFakeStream(track),
+    );
+    const engine = new AudioEngine(record);
+    await engine.requestPermission();
+
+    vi.useFakeTimers();
+    try {
+      const promise = engine.startMeasurement(5);
+      await vi.advanceTimersByTimeAsync(100);
+
+      // Trigger state-change abort: mutate state on the captured instance, then
+      // call the handler the engine registered via addEventListener.
+      expect(capturedStateChangeHandler).not.toBeNull();
+      expect(fakeCtxInstance).not.toBeNull();
+      fakeCtxInstance!.state = 'suspended';
+      capturedStateChangeHandler!();
+
+      await vi.advanceTimersByTimeAsync(50);
+
+      const result = (await promise) as MeasurementResult;
+      expect(result.aborted).toBe(true);
+      if (result.aborted === true) {
+        expect(result.reason).toBe('state-change');
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('aborts with reason "manual" when AbortSignal fires', async () => {
+    vi.useFakeTimers();
+    try {
+      const engine = await grantedEngine();
+      const controller = new AbortController();
+      const promise = engine.startMeasurement(5, controller.signal);
+
+      await vi.advanceTimersByTimeAsync(200);
+      controller.abort();
+      await vi.advanceTimersByTimeAsync(50);
+
+      const result = (await promise) as MeasurementResult;
+      expect(result.aborted).toBe(true);
+      if (result.aborted === true) {
+        expect(result.reason).toBe('manual');
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('AudioEngine.calibrate (CAL-01)', () => {
+  async function grantedEngine() {
+    const track = makeFakeTrack();
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockResolvedValue(
+      makeFakeStream(track),
+    );
+    const engine = new AudioEngine(record);
+    await engine.requestPermission();
+    return engine;
+  }
+
+  it('returns { ambientDbFs } on happy path', async () => {
+    vi.useFakeTimers();
+    try {
+      const engine = await grantedEngine();
+      const promise = engine.calibrate();
+      // Calibration is a hard-coded 3-second window
+      await vi.advanceTimersByTimeAsync(3100);
+
+      const result = await promise;
+      expect(typeof result.ambientDbFs).toBe('number');
+      expect(Number.isFinite(result.ambientDbFs)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('throws "Calibration aborted" when signal aborts', async () => {
+    vi.useFakeTimers();
+    try {
+      const engine = await grantedEngine();
+      const controller = new AbortController();
+      const promise = engine.calibrate(controller.signal);
+
+      await vi.advanceTimersByTimeAsync(100);
+      controller.abort();
+      await vi.advanceTimersByTimeAsync(50);
+
+      await expect(promise).rejects.toThrow(/Calibration aborted/);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
