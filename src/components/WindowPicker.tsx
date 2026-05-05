@@ -23,7 +23,7 @@ export function WindowPicker() {
             'rounded-full px-4 py-1 text-sm font-medium transition-colors',
             windowSeconds === opt
               ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700',
+              : 'text-gray-700 hover:text-gray-900',
           )}
         >
           {opt}s
