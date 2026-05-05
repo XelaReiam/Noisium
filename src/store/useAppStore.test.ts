@@ -3,15 +3,30 @@ import { useAppStore } from './useAppStore';
 
 // Reset store between tests by setting all fields back to defaults
 beforeEach(() => {
+  // Reset localStorage so the partialize tests see a clean write.
+  localStorage.clear();
   useAppStore.setState({
+    // Phase 1
     windowSeconds: 8,
     sessionDate: '2026-05-05',
     persistenceWorking: true,
     crossDayPromptShown: false,
+    // Phase 2
     micPermission: 'idle',
     micDeviceId: null,
     audioReady: false,
-  });
+    // Phase 3 — these properties may not yet exist on the store at this commit;
+    // Plan 03-02 adds them. setState with extra keys is a no-op until then.
+    demos: [],
+    scores: {},
+    skippedDemoIds: [],
+    calibrationAmbientDb: null,
+    measuringDemoId: null,
+    abortedDemoId: null,
+    abortMessage: null,
+    redoConfirmDemoId: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
 });
 
 describe('useAppStore — Phase 2 mic state extension', () => {
@@ -62,8 +77,8 @@ describe('useAppStore — clearSession resets mic state', () => {
   });
 });
 
-describe('useAppStore — partialize invariant', () => {
-  it('localStorage payload contains ONLY windowSeconds and sessionDate', () => {
+describe('useAppStore — partialize invariant (Phase 3 shape)', () => {
+  it('localStorage payload contains exactly the Phase 3 persisted keys', () => {
     // Trigger a write
     useAppStore.getState().setMicPermission('granted');
     useAppStore.getState().setMicDeviceId('dev-leaky');
@@ -75,12 +90,35 @@ describe('useAppStore — partialize invariant', () => {
     const parsed = JSON.parse(raw as string);
     // Persisted shape: { state: {...}, version: 0 }
     const stateKeys = Object.keys(parsed.state).sort();
-    expect(stateKeys).toEqual(['sessionDate', 'windowSeconds']);
-    // Transient fields MUST NOT leak into storage
+    // Phase 3 expanded shape: original two keys + demos + scores + skippedDemoIds
+    expect(stateKeys).toEqual([
+      'demos',
+      'scores',
+      'sessionDate',
+      'skippedDemoIds',
+      'windowSeconds',
+    ]);
+  });
+
+  it('transient fields are NOT in localStorage', () => {
+    // Trigger a write so storage is populated
+    useAppStore.getState().setWindowSeconds(8);
+
+    const raw = localStorage.getItem('noisium:state');
+    const parsed = JSON.parse(raw as string);
+
+    // Phase 1 + Phase 2 transients must remain excluded
+    expect(parsed.state).not.toHaveProperty('persistenceWorking');
+    expect(parsed.state).not.toHaveProperty('crossDayPromptShown');
     expect(parsed.state).not.toHaveProperty('micPermission');
     expect(parsed.state).not.toHaveProperty('micDeviceId');
     expect(parsed.state).not.toHaveProperty('audioReady');
-    expect(parsed.state).not.toHaveProperty('persistenceWorking');
-    expect(parsed.state).not.toHaveProperty('crossDayPromptShown');
+
+    // Phase 3 transients must also be excluded
+    expect(parsed.state).not.toHaveProperty('calibrationAmbientDb');
+    expect(parsed.state).not.toHaveProperty('measuringDemoId');
+    expect(parsed.state).not.toHaveProperty('abortedDemoId');
+    expect(parsed.state).not.toHaveProperty('abortMessage');
+    expect(parsed.state).not.toHaveProperty('redoConfirmDemoId');
   });
 });
