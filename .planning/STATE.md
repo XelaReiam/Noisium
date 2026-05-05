@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 03-03-PLAN.md (AudioEngine startMeasurement + calibrate — 6 new TDD tests, 104 total green)
-last_updated: "2026-05-05T22:00:04.588Z"
+stopped_at: Completed 03-05-PLAN.md (CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator — 5 new components, 104 tests green)
+last_updated: "2026-05-05T22:11:45.978Z"
 last_activity: 2026-05-05 — Phase 2 Plan 5 complete (manual verification checkpoint approved — AGC confirmed, level indicator live, browser-specific error copy verified)
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 13
   percent: 50
 ---
 
@@ -60,6 +60,8 @@ Progress: [#####░░░░░] 50%
 | Phase 03-calibration-measurement-show-control P01 | 2min | 3 tasks | 3 files |
 | Phase 03-calibration-measurement-show-control P02 | 4 | 2 tasks | 2 files |
 | Phase 03-calibration-measurement-show-control P03 | 3min | 2 tasks | 3 files |
+| Phase 03-calibration-measurement-show-control P04 | 2min | 3 tasks | 3 files |
+| Phase 03-calibration-measurement-show-control P05 | 3min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -98,6 +100,12 @@ Recent decisions affecting current work:
 - [Phase 03-calibration-measurement-show-control]: moveDemo uses up/down direction enum rather than reorderDemos full-array swap — fits planned arrow-button UI in 03-04 without requiring UI to reconstruct full reordered array
 - [Phase 03-calibration-measurement-show-control]: confirmRedo does NOT call startMeasure — calling component (03-05) owns sequencing; abortReasonToMessage at module scope is single source of truth for abort copy; completeMeasure removes demo from skippedDemoIds (measured demo supersedes skip)
 - [Phase 03-calibration-measurement-show-control]: setInterval(33ms) for measurement sampling (not rAF) — avoids frame contention with existing VU loop; addEventListener('statechange') not onstatechange= — additive, preserves future Phase 2 wiring; performance.now() for wall-clock window boundary; dbFsFromRms imported from measurement.ts only
+- [Phase 03-calibration-measurement-show-control]: Up/down arrow buttons for reorder (not HTML5 drag-and-drop) — simpler code, fits moveDemo direction enum
+- [Phase 03-calibration-measurement-show-control]: Redo confirm is inline bar within the row (not modal) — transforms score area in place on requestRedo
+- [Phase 03-calibration-measurement-show-control]: onMeasure prop injected into DemoCard/DemoListEditor — measurement orchestration owned by Plan 03-05, not the card
+- [Phase 03-calibration-measurement-show-control]: Two useEffects in MeasurementOrchestrator: main run effect + abortMessage observer — necessary because engine resolves after store already updated abortMeasure
+- [Phase 03-calibration-measurement-show-control]: abortReasonRef tracking: sets 'device-change' before calling controller.abort() so store gets precise reason (engine always returns 'manual' for signal-triggered aborts)
+- [Phase 03-calibration-measurement-show-control]: CountdownOverlay renders AbortWarning in same DOM slot (both absolute inset-0) — orchestrator switches phase.kind; no unmount/remount flicker
 
 ### Pending Todos
 
@@ -110,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-05T22:00:04.585Z
-Stopped at: Completed 03-03-PLAN.md (AudioEngine startMeasurement + calibrate — 6 new TDD tests, 104 total green)
+Last session: 2026-05-05T22:11:45.975Z
+Stopped at: Completed 03-05-PLAN.md (CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator — 5 new components, 104 tests green)
 Resume file: None

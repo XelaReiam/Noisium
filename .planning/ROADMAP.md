@@ -54,7 +54,7 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   3. If the AudioContext loses `'running'` state or the mic device changes during measurement, the capture aborts and a visible warning appears — no silent bad reading is stored
   4. The host sees each demo's captured score privately after measurement completes
   5. The host can skip a demo (marked excluded) or redo a measurement with a brief confirmation; skipped and redone demos behave correctly in subsequent logic
-**Plans:** 6 plans (planned 2026-05-05)
+**Plans:** 4/6 plans executed
 - [ ] 03-01-PLAN.md (Wave 1) — Pure-function measurement.ts module + Phase 2 partialize-test update (Wave 0 foundation)
 - [ ] 03-02-PLAN.md (Wave 2, parallel with 03-03) — Store extension: Phase 3 fields/actions, partialize update, clearSession extension
 - [ ] 03-03-PLAN.md (Wave 2, parallel with 03-02) — AudioEngine.startMeasurement + calibrate methods + tests
@@ -80,5 +80,5 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 |-------|----------------|--------|-----------|
 | 1. Scaffold + State Layer | 3/3 | Complete    | 2026-05-05 |
 | 2. Audio Pipeline | 5/5 | Complete    | 2026-05-05 |
-| 3. Calibration + Measurement + Show Control | 0/6 | Planned     | -          |
+| 3. Calibration + Measurement + Show Control | 4/6 | In Progress|  |
 | 4. Two-Surface Architecture | 0/TBD | Not started | - |
