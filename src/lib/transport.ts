@@ -121,6 +121,9 @@ let _currentMode: TransportMode | null = null;
  */
 export function isCliServed(): boolean {
   if (typeof window === 'undefined') return false;
+  // Flag injected by the CLI server into every index.html response
+  if ((window as unknown as Record<string, unknown>)['__NOISIUM_CLI__']) return true;
+  // Fallback: non-localhost plain HTTP (remote device, no flag yet)
   if (window.isSecureContext) return false;
   const { hostname } = window.location;
   return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '[::1]';

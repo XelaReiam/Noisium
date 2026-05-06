@@ -1,6 +1,8 @@
-import { createReadStream, promises as fsp } from 'node:fs';
+import { createReadStream, promises as fsp, readFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { lookup } from 'mime-types';
+
+const CLI_INJECT = '<script>window.__NOISIUM_CLI__=1</script>';
 
 /**
  * Serves static files from distDir with SPA fallback.
@@ -28,8 +30,14 @@ export async function serveStatic(distDir, req, res) {
 
   if (exists) {
     const contentType = lookup(filePath) || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
-    createReadStream(filePath).pipe(res);
+    if (filePath.endsWith('index.html')) {
+      const html = readFileSync(filePath, 'utf8').replace('</head>', `${CLI_INJECT}</head>`);
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(html);
+    } else {
+      res.writeHead(200, { 'Content-Type': contentType });
+      createReadStream(filePath).pipe(res);
+    }
     return;
   }
 
@@ -43,7 +51,7 @@ export async function serveStatic(distDir, req, res) {
 
   // No extension → SPA fallback
   const indexPath = join(distDir, 'index.html');
-  const contentType = 'text/html';
-  res.writeHead(200, { 'Content-Type': contentType });
-  createReadStream(indexPath).pipe(res);
+  const html = readFileSync(indexPath, 'utf8').replace('</head>', `${CLI_INJECT}</head>`);
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end(html);
 }
