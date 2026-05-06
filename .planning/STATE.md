@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: MVP
 status: planning
-stopped_at: Completed Phase 8 (all 3 plans verified)
-last_updated: "2026-05-06T22:35:00Z"
+stopped_at: Completed 09-companion-cli-server/09-01-PLAN.md
+last_updated: "2026-05-06T21:01:22.418Z"
 last_activity: 2026-05-06 — Phase 8 complete (8/8 requirements, 319 tests passing)
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 0
+  total_plans: 9
+  completed_plans: 8
+  percent: 50
 ---
 
 # Project State
@@ -52,6 +52,7 @@ Next step: `/gsd:plan-phase 9`
 | Phase 08-transport-abstraction-host-connection-ux P01 | ~5min | 2 tasks | 5 files |
 | Phase 08-transport-abstraction-host-connection-ux P02 | ~8min | 2 tasks | 5 files |
 | Phase 08-transport-abstraction-host-connection-ux P03 | ~8min | 2 tasks | 4 files |
+| Phase 09-companion-cli-server P09-01 | 8 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 08-transport-abstraction-host-connection-ux]: retryDelayRef doubles in setTimeout callback ensuring doubling tracks actual retry attempts not rapid-close sequences
 - [Phase 08-transport-abstraction-host-connection-ux]: BroadcastBridge accesses transport._ws directly for WS lifecycle hooks (no onStatusChange in transport.ts)
 - [Phase 08-transport-abstraction-host-connection-ux]: Use vi.spyOn on store action for cross-describe WS status verification (store state reads are flaky with async React flushing)
+- [Phase 09-companion-cli-server]: WebSocketServer created with { server: httpServer } and NO { path } option — matches WebSocketTransport connecting to bare ws://host
+- [Phase 09-companion-cli-server]: SPA fallback uses extname(urlPath) !== '' guard to distinguish SPA routes from missing asset files
+- [Phase 09-companion-cli-server]: getLanIp VIRTUAL_IFACE regex filters VPN interface names before RFC 1918 ordered preference
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-06T20:21:22.495Z
-Stopped at: Completed 08-transport-abstraction-host-connection-ux/08-02-PLAN.md
+Last session: 2026-05-06T21:01:22.415Z
+Stopped at: Completed 09-companion-cli-server/09-01-PLAN.md
 Resume file: None

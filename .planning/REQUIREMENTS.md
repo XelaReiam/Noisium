@@ -16,10 +16,10 @@ Requirements for the v1.2 milestone. Each maps to roadmap phases (starting from 
 
 ### CLI
 
-- [ ] **CLI-01**: Running `npx noisium` starts a local server that serves the built app over HTTP on the LAN
-- [ ] **CLI-02**: CLI starts a WebSocket relay on the same port that relays host→projector messages
-- [ ] **CLI-03**: CLI detects and prints the LAN IP + URL (e.g. `http://192.168.1.42:4000`) on startup
-- [ ] **CLI-04**: CLI requires no configuration — zero-argument startup works out of the box
+- [x] **CLI-01**: Running `npx noisium` starts a local server that serves the built app over HTTP on the LAN
+- [x] **CLI-02**: CLI starts a WebSocket relay on the same port that relays host→projector messages
+- [x] **CLI-03**: CLI detects and prints the LAN IP + URL (e.g. `http://192.168.1.42:4000`) on startup
+- [x] **CLI-04**: CLI requires no configuration — zero-argument startup works out of the box
 
 ### Connection UX
 
@@ -66,10 +66,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | TRANS-02 | Phase 8 | Complete |
 | TRANS-03 | Phase 8 | Complete |
 | TRANS-04 | Phase 8 | Complete |
-| CLI-01 | Phase 9 | Pending |
-| CLI-02 | Phase 9 | Pending |
-| CLI-03 | Phase 9 | Pending |
-| CLI-04 | Phase 9 | Pending |
+| CLI-01 | Phase 9 | Complete |
+| CLI-02 | Phase 9 | Complete |
+| CLI-03 | Phase 9 | Complete |
+| CLI-04 | Phase 9 | Complete |
 | CONN-01 | Phase 8 | Complete |
 | CONN-02 | Phase 8 | Complete |
 | CONN-03 | Phase 8 | Complete |

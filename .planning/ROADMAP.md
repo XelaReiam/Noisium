@@ -156,4 +156,4 @@ Plans:
 | 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 7. Export + Confetti | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 8. Transport Abstraction + Host Connection UX | v1.2 | 3/3 | Complete | 2026-05-06 |
-| 9. Companion CLI Server | v1.2 | 0/2 | Not started | - |
+| 9. Companion CLI Server | 1/2 | In Progress|  | - |
