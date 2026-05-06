@@ -136,7 +136,11 @@ Plans:
   3. When the host sends a projector message (e.g. measurement start), the projector tab on the second machine receives it via the CLI's WebSocket relay with no extra setup
   4. If the CLI is restarted mid-show, the projector tab reconnects automatically and resumes receiving messages without manual intervention on either machine
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Core server modules: lanIp.js, staticHandler.js, wsRelay.js, server.js + all test stubs (Wave 0) and implementations
+- [ ] 09-02-PLAN.md — CLI entry point (server/index.js), server/package.json, build:lan script, bin field, .gitignore
 
 ---
 
@@ -151,5 +155,5 @@ Plans:
 | 5. Polish Broadcast Architecture | v1.0 | 1/1 | Complete | 2026-05-06 |
 | 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 7. Export + Confetti | v1.1 | 2/2 | Complete | 2026-05-06 |
-| 8. Transport Abstraction + Host Connection UX | 3/3 | Complete   | 2026-05-06 | - |
-| 9. Companion CLI Server | v1.2 | 0/TBD | Not started | - |
+| 8. Transport Abstraction + Host Connection UX | v1.2 | 3/3 | Complete | 2026-05-06 |
+| 9. Companion CLI Server | v1.2 | 0/2 | Not started | - |
