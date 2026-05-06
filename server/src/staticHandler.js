@@ -2,7 +2,11 @@ import { createReadStream, promises as fsp, readFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { lookup } from 'mime-types';
 
-const CLI_INJECT = '<script>window.__NOISIUM_CLI__=1</script>';
+function buildInject(lanUrl) {
+  // JSON.stringify safely escapes the URL for an inline JS string literal.
+  const lanLine = lanUrl ? `window.__NOISIUM_LAN_URL__=${JSON.stringify(lanUrl)};` : '';
+  return `<script>window.__NOISIUM_CLI__=1;${lanLine}</script>`;
+}
 
 /**
  * Serves static files from distDir with SPA fallback.
@@ -15,8 +19,11 @@ const CLI_INJECT = '<script>window.__NOISIUM_CLI__=1</script>';
  * @param {string} distDir  Absolute path to the built app directory.
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:http').ServerResponse} res
+ * @param {{ lanUrl?: string }} [options]
  */
-export async function serveStatic(distDir, req, res) {
+export async function serveStatic(distDir, req, res, options = {}) {
+  const cliInject = buildInject(options.lanUrl);
+
   // Strip query string and decode
   const rawUrl = req.url ?? '/';
   const urlPath = rawUrl.split('?')[0];
@@ -31,7 +38,7 @@ export async function serveStatic(distDir, req, res) {
   if (exists) {
     const contentType = lookup(filePath) || 'application/octet-stream';
     if (filePath.endsWith('index.html')) {
-      const html = readFileSync(filePath, 'utf8').replace('</head>', `${CLI_INJECT}</head>`);
+      const html = readFileSync(filePath, 'utf8').replace('</head>', `${cliInject}</head>`);
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
     } else {
@@ -51,7 +58,7 @@ export async function serveStatic(distDir, req, res) {
 
   // No extension → SPA fallback
   const indexPath = join(distDir, 'index.html');
-  const html = readFileSync(indexPath, 'utf8').replace('</head>', `${CLI_INJECT}</head>`);
+  const html = readFileSync(indexPath, 'utf8').replace('</head>', `${cliInject}</head>`);
   res.writeHead(200, { 'Content-Type': 'text/html' });
   res.end(html);
 }

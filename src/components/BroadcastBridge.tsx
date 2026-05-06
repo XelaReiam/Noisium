@@ -1,6 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { getTransport, getEffectiveMode, type TransportMode } from '../lib/transport';
+import {
+  getTransport,
+  getEffectiveMode,
+  resetNoisiumTransport,
+  type TransportMode,
+} from '../lib/transport';
 import {
   deriveProjectorMessage,
   type ProjectorMessageState,
@@ -42,6 +47,13 @@ const HEARTBEAT_INTERVAL_MS = 2000;
  */
 export function BroadcastBridge() {
   const lastSentRef = useRef<string>('');
+
+  // WS reconnect state (mirrors ProjectorView). When the relay drops, the
+  // host would otherwise stop broadcasting silently — bumping retryCount
+  // re-runs the effect to recreate the transport.
+  const [retryCount, setRetryCount] = useState(0);
+  const retryDelayRef = useRef(1000);
+  const retryTimerRef = useRef<number | null>(null);
 
   const lanModeEnabled = useAppStore((s) => s.lanModeEnabled);
   const setWsConnectionStatus = useAppStore((s) => s.setWsConnectionStatus);
@@ -86,12 +98,23 @@ export function BroadcastBridge() {
       const wsTransport = transport as unknown as { _ws?: WebSocket };
       if (wsTransport._ws) {
         const ws = wsTransport._ws;
+
+        function scheduleReconnect(): void {
+          retryTimerRef.current = window.setTimeout(() => {
+            retryDelayRef.current = Math.min(retryDelayRef.current * 2, 30_000);
+            resetNoisiumTransport();
+            setRetryCount((n) => n + 1);
+          }, retryDelayRef.current);
+        }
+
         ws.onopen = () => {
+          retryDelayRef.current = 1000;
           setWsConnectionStatus('connected');
         };
         ws.onclose = () => {
           const prior = useAppStore.getState().wsConnectionStatus;
           setWsConnectionStatus(prior === 'connected' ? 'reconnecting' : 'disconnected');
+          scheduleReconnect();
         };
       }
     }
@@ -134,9 +157,13 @@ export function BroadcastBridge() {
       unsub();
       transport.removeEventListener('message', handleIncoming);
       clearInterval(heartbeatId);
+      if (retryTimerRef.current !== null) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
       // NOTE: do NOT call transport.close() — factory owns lifecycle.
     };
-  }, [effectiveMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effectiveMode, retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

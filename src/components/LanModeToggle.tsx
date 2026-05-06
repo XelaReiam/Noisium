@@ -6,15 +6,20 @@ import { useAppStore } from '../store/useAppStore';
  * When LAN mode is off: renders only the toggle (BroadcastChannel is in use).
  * When LAN mode is on: renders the toggle + projector URL for the LAN device.
  *
- * URL derivation follows research pitfall 5: in jsdom, window.location.protocol='http:',
- * window.location.host='localhost', producing 'http://localhost/#/projector'.
+ * URL derivation: when the CLI server injects window.__NOISIUM_LAN_URL__ (so
+ * the URL points at the LAN IP, not localhost), prefer it. Otherwise fall back
+ * to window.location — fine in jsdom and on GitHub Pages.
  */
 export function LanModeToggle() {
   const lanModeEnabled = useAppStore((s) => s.lanModeEnabled);
   const setLanModeEnabled = useAppStore((s) => s.setLanModeEnabled);
 
+  const injectedLanUrl = (window as unknown as Record<string, unknown>)['__NOISIUM_LAN_URL__'];
   const basePath = window.location.pathname.replace(/\/$/, '');
-  const projectorUrl = `${window.location.protocol}//${window.location.host}${basePath}/#/projector`;
+  const projectorUrl =
+    typeof injectedLanUrl === 'string' && injectedLanUrl.length > 0
+      ? `${injectedLanUrl}/#/projector`
+      : `${window.location.protocol}//${window.location.host}${basePath}/#/projector`;
 
   return (
     <div className="flex flex-col gap-1">

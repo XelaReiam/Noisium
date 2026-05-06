@@ -7,11 +7,14 @@ import { attachRelay } from './wsRelay.js';
  *
  * @param {string} distDir  Absolute path to the built app directory.
  * @param {number} port     Port to listen on. Use 0 to let the OS pick a free port.
+ * @param {{ lanUrl?: string }} [options]  Optional LAN URL injected into index.html
+ *                                         so the host UI can display the projector
+ *                                         URL even when loaded from localhost.
  * @returns {Promise<{ server: import('node:http').Server, wss: import('ws').WebSocketServer, port: number }>}
  */
-export function createNoisiumServer(distDir, port) {
+export function createNoisiumServer(distDir, port, options = {}) {
   return new Promise((resolve, reject) => {
-    const server = createServer((req, res) => serveStatic(distDir, req, res));
+    const server = createServer((req, res) => serveStatic(distDir, req, res, options));
     const wss = attachRelay(server);
 
     server.on('error', reject);
