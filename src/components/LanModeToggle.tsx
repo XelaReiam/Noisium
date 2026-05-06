@@ -13,7 +13,8 @@ export function LanModeToggle() {
   const lanModeEnabled = useAppStore((s) => s.lanModeEnabled);
   const setLanModeEnabled = useAppStore((s) => s.setLanModeEnabled);
 
-  const projectorUrl = `${window.location.protocol}//${window.location.host}/#/projector`;
+  const basePath = window.location.pathname.replace(/\/$/, '');
+  const projectorUrl = `${window.location.protocol}//${window.location.host}${basePath}/#/projector`;
 
   return (
     <div className="flex flex-col gap-1">

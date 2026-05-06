@@ -4,10 +4,12 @@ const HTTPS_URL = 'https://xelareiam.github.io/Noisium/';
 
 function isRunningOnHTTP(): boolean {
   if (window.isSecureContext) return false;
-  const { hostname } = window.location;
+  const { hostname, hash } = window.location;
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
     return false;
   }
+  // Projector tab served over plain HTTP on LAN is valid — no mic needed
+  if (hash.startsWith('#/projector')) return false;
   return true;
 }
 

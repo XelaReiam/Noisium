@@ -71,7 +71,8 @@ describe('LanModeToggle', () => {
     const urlEl = screen.getByTestId('projector-url');
     // jsdom sets window.location.host (may include port e.g. localhost:3000),
     // so match the actual runtime value rather than a hardcoded hostname.
-    const expectedUrl = `${window.location.protocol}//${window.location.host}/#/projector`;
+    const basePath = window.location.pathname.replace(/\/$/, '');
+    const expectedUrl = `${window.location.protocol}//${window.location.host}${basePath}/#/projector`;
     expect(urlEl.textContent).toBe(expectedUrl);
   });
 
