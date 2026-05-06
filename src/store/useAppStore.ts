@@ -10,6 +10,8 @@ export type WindowSeconds = 5 | 8 | 10;
 export interface Demo {
   id: string;
   name: string;
+  subject?: string;   // META-01 — free-text topic / app name
+  logoUrl?: string;   // META-02 — stored as data URL
 }
 
 // Re-export so Plans 03-04 / 03-05 can `import { Score } from '../store/useAppStore'`
@@ -68,6 +70,9 @@ export interface AppState {
   removeDemo: (id: string) => void;
   renameDemo: (id: string, name: string) => void;
   moveDemo: (id: string, direction: 'up' | 'down') => void;
+
+  // Phase 6 — per-demo metadata
+  updateDemoMeta: (id: string, patch: Pick<Demo, 'subject' | 'logoUrl'>) => void;
 
   // Phase 3 — calibration
   setCalibrationAmbient: (db: number) => void;
@@ -204,6 +209,14 @@ export const useAppStore = create<AppState>()(
           next[newIdx] = tmp;
           return { demos: next };
         }),
+
+      // -- Phase 6 per-demo metadata ----
+      updateDemoMeta: (id, patch) =>
+        set((state) => ({
+          demos: state.demos.map((d) =>
+            d.id === id ? { ...d, ...patch } : d
+          ),
+        })),
 
       // -- Phase 3 calibration ----
       setCalibrationAmbient: (db) => set({ calibrationAmbientDb: db }),

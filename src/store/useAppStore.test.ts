@@ -534,6 +534,95 @@ describe('Phase 4: clearSession resets transients', () => {
   });
 });
 
+// ============================================================================
+// Phase 6 tests — updateDemoMeta (META-01 / META-02)
+// ============================================================================
+
+describe('useAppStore — updateDemoMeta (META-01 / META-02)', () => {
+  it('sets subject on the matching demo and leaves others unchanged', () => {
+    useAppStore.getState().addDemo('Alpha');
+    useAppStore.getState().addDemo('Bravo');
+    const [a, b] = useAppStore.getState().demos;
+
+    useAppStore.getState().updateDemoMeta(a.id, { subject: 'My App' });
+
+    const demos = useAppStore.getState().demos;
+    expect(demos[0].subject).toBe('My App');
+    expect(demos[1].subject).toBeUndefined();
+    // b's name/id unchanged
+    expect(demos[1].id).toBe(b.id);
+    expect(demos[1].name).toBe(b.name);
+  });
+
+  it('sets logoUrl on the correct demo', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+
+    useAppStore.getState().updateDemoMeta(id, { logoUrl: 'data:image/png;base64,abc' });
+
+    expect(useAppStore.getState().demos[0].logoUrl).toBe('data:image/png;base64,abc');
+  });
+
+  it('sets both subject and logoUrl atomically', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+
+    useAppStore
+      .getState()
+      .updateDemoMeta(id, { subject: 'x', logoUrl: 'data:image/png;base64,xyz' });
+
+    const demo = useAppStore.getState().demos[0];
+    expect(demo.subject).toBe('x');
+    expect(demo.logoUrl).toBe('data:image/png;base64,xyz');
+  });
+
+  it('subject and logoUrl survive store state round-trip (fields accessible on the store)', () => {
+    useAppStore.getState().addDemo('Acme');
+    const id = useAppStore.getState().demos[0].id;
+
+    useAppStore.getState().updateDemoMeta(id, { subject: 'Acme', logoUrl: 'data:...' });
+
+    const demo = useAppStore.getState().demos[0];
+    expect(demo.subject).toBe('Acme');
+    expect(demo.logoUrl).toBe('data:...');
+  });
+
+  it('demo with subject and logoUrl persists within the demos array in localStorage — no new top-level keys', () => {
+    useAppStore.getState().addDemo('Acme');
+    const id = useAppStore.getState().demos[0].id;
+    useAppStore.getState().updateDemoMeta(id, { subject: 'Acme Corp', logoUrl: 'data:...' });
+
+    const raw = localStorage.getItem('noisium:state');
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw as string);
+
+    // Top-level persisted keys must remain exactly the same five
+    const stateKeys = Object.keys(parsed.state).sort();
+    expect(stateKeys).toEqual([
+      'demos',
+      'scores',
+      'sessionDate',
+      'skippedDemoIds',
+      'windowSeconds',
+    ]);
+
+    // subject and logoUrl live inside demos[0], not at the top level
+    expect(parsed.state.demos[0].subject).toBe('Acme Corp');
+    expect(parsed.state.demos[0].logoUrl).toBe('data:...');
+  });
+
+  it('clearSession sets demos to [] (metadata implicitly cleared)', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+    useAppStore.getState().updateDemoMeta(id, { subject: 'My App', logoUrl: 'data:...' });
+    expect(useAppStore.getState().demos).toHaveLength(1);
+
+    useAppStore.getState().clearSession();
+
+    expect(useAppStore.getState().demos).toEqual([]);
+  });
+});
+
 describe('Phase 4: partialize invariant unchanged', () => {
   it('persists ONLY windowSeconds, sessionDate, demos, scores, skippedDemoIds', () => {
     // Set Phase 4 transients to non-defaults to be certain they don't bleed.
