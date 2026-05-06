@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-05-06T10:00:00.000Z"
+status: completed
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-05-06T08:05:52.097Z"
 last_activity: 2026-05-06 — Phase 4 Plan 1 complete (MockBroadcastChannel + projector pure functions, 143 tests passing)
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 18
-  completed_plans: 15
-  percent: 78
+  total_plans: 19
+  completed_plans: 16
+  percent: 75
 ---
 
 # Project State
@@ -63,6 +63,7 @@ Progress: [########░░] 75%
 | Phase 03-calibration-measurement-show-control P04 | 2min | 3 tasks | 3 files |
 | Phase 03-calibration-measurement-show-control P05 | 3min | 4 tasks | 5 files |
 | Phase 03-calibration-measurement-show-control P06 | ~2h | 3 tasks | 2 files |
+| Phase 04-two-surface-architecture P02 | 5min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,8 @@ Recent decisions affecting current work:
 - [Phase 04-two-surface-architecture P01]: MockBroadcastChannel added to setup.ts globalThis (not per-file vi.mock) — jsdom 29.1.1 has no BroadcastChannel; global assignment covers all transitively importing test files
 - [Phase 04-two-surface-architecture P01]: reveal-buildup kept in ProjectorMessage union as projector-internal-only variant — host invariant test asserts deriveProjectorMessage never returns it (04-RESEARCH.md Pitfall 4)
 - [Phase 04-two-surface-architecture P01]: ProjectorMessageState interface decoupled from useAppStore — avoids circular import when Plan 02 adds revealWinner using deriveWinner return type; enables pure synchronous testing
+- [Phase 04-two-surface-architecture]: Staleness timer (_projectorStaleTimer) lives at module scope — storing setTimeout IDs in Zustand state is unusual; module-level gives deterministic clearTimeout from refreshProjectorHeartbeat and clearSession
+- [Phase 04-two-surface-architecture]: measurePhase resets inside completeMeasure (not separate orchestrator action) — keeps store internally consistent; orchestrator handles window-end display tick before calling completeMeasure
 
 ### Pending Todos
 
@@ -125,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-05T23:14:57.997Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-two-surface-architecture/04-CONTEXT.md
+Last session: 2026-05-06T08:05:52.091Z
+Stopped at: Completed 04-02-PLAN.md
+Resume file: None
