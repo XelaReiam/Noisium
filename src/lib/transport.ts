@@ -119,11 +119,21 @@ let _currentMode: TransportMode | null = null;
  * localStorage yet, so we auto-select WebSocket transport regardless of
  * the stored preference.
  */
-function isCliServed(): boolean {
+export function isCliServed(): boolean {
   if (typeof window === 'undefined') return false;
   if (window.isSecureContext) return false;
   const { hostname } = window.location;
   return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '[::1]';
+}
+
+/**
+ * Returns the effective transport mode: 'websocket' when CLI-served (LAN IP),
+ * otherwise the caller's preference. Use this for WS lifecycle decisions
+ * (onopen, onclose, reconnect) so they fire even when lanModeEnabled=false
+ * on a freshly-opened remote projector.
+ */
+export function getEffectiveMode(mode: TransportMode): TransportMode {
+  return isCliServed() ? 'websocket' : mode;
 }
 
 /**

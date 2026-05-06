@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getTransport, resetNoisiumTransport, type TransportMode } from '../lib/transport';
+import { getTransport, getEffectiveMode, resetNoisiumTransport, type TransportMode } from '../lib/transport';
 import { useAppStore } from '../store/useAppStore';
 import type { ProjectorMessage } from '../lib/projector';
 import { ProjectorIdle } from './ProjectorIdle';
@@ -56,6 +56,7 @@ export function ProjectorView() {
 
   const lanModeEnabled = useAppStore((s) => s.lanModeEnabled);
   const mode: TransportMode = lanModeEnabled ? 'websocket' : 'broadcast';
+  const effectiveMode = getEffectiveMode(mode);
 
   useEffect(() => {
     const transport = getTransport(mode);
@@ -130,8 +131,8 @@ export function ProjectorView() {
     }, HEARTBEAT_INTERVAL_MS);
 
     // WS-mode reconnect with exponential backoff (CONN-04).
-    // Only attach lifecycle listeners in websocket mode.
-    if (mode === 'websocket') {
+    // Only attach lifecycle listeners in websocket mode (or auto-detected CLI mode).
+    if (effectiveMode === 'websocket') {
       // Access the underlying WebSocket via the transport to attach open/close.
       // WebSocketTransport does not expose onStatusChange, so we cast.
       const wsTransport = transport as unknown as {
@@ -166,7 +167,7 @@ export function ProjectorView() {
       }
       // Do NOT call transport.close() — the factory owns the lifecycle.
     };
-  }, [mode, retryCount]);
+  }, [effectiveMode, retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Render switch — drives off message.phase, with the windowEnd overlay
   // taking precedence over plain idle.

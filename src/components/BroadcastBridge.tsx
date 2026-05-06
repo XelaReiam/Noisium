@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { getTransport, type TransportMode } from '../lib/transport';
+import { getTransport, getEffectiveMode, type TransportMode } from '../lib/transport';
 import {
   deriveProjectorMessage,
   type ProjectorMessageState,
@@ -49,6 +49,7 @@ export function BroadcastBridge() {
   // Derive the current mode string — used as a dependency so the effect
   // re-runs when the user toggles LAN mode (TRANS-04 requirement).
   const mode: TransportMode = lanModeEnabled ? 'websocket' : 'broadcast';
+  const effectiveMode = getEffectiveMode(mode);
 
   useEffect(() => {
     // Capture transport in a local const (pitfall 2: cleanup must reference
@@ -76,7 +77,7 @@ export function BroadcastBridge() {
     }
 
     // --- WS lifecycle hooks (only in websocket mode) ---
-    if (mode === 'websocket') {
+    if (effectiveMode === 'websocket') {
       setWsConnectionStatus('waiting');
       // Access the underlying WebSocket instance to attach lifecycle hooks.
       // We use the internal _ws field (as any) since WebSocketTransport does
@@ -135,7 +136,7 @@ export function BroadcastBridge() {
       clearInterval(heartbeatId);
       // NOTE: do NOT call transport.close() — factory owns lifecycle.
     };
-  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effectiveMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
