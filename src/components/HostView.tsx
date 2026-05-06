@@ -9,6 +9,7 @@ import { DemoListEditor } from './DemoListEditor';
 import { MeasurementOrchestrator } from './MeasurementOrchestrator';
 import { BroadcastBridge } from './BroadcastBridge';
 import { ProjectorToolbar } from './ProjectorToolbar';
+import { DownloadCsvButton } from './DownloadCsvButton';
 import { useAppStore } from '../store/useAppStore';
 import { canRevealWinner } from '../lib/projector';
 import { clsx } from 'clsx';
@@ -98,6 +99,7 @@ export function HostView() {
           >
             Reveal winner
           </button>
+          <DownloadCsvButton />
           {!canReveal && !revealActive && demos.length > 0 && (
             <p className="text-xs text-gray-500">
               Measure every non-skipped demo to enable reveal.
