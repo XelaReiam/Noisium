@@ -89,7 +89,8 @@ export function BroadcastBridge() {
           setWsConnectionStatus('connected');
         };
         ws.onclose = () => {
-          setWsConnectionStatus('disconnected');
+          const prior = useAppStore.getState().wsConnectionStatus;
+          setWsConnectionStatus(prior === 'connected' ? 'reconnecting' : 'disconnected');
         };
       }
     }
