@@ -37,7 +37,7 @@ Full archive: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 <details>
 <summary>v1.2 Local Network Projector Mode (Phases 8–9) — IN PLANNING</summary>
 
-- [ ] **Phase 8: Transport Abstraction + Host Connection UX** - Pluggable transport interface, Local Network Mode toggle, LAN URL display, and connection status indicators
+- [x] **Phase 8: Transport Abstraction + Host Connection UX** - Pluggable transport interface, Local Network Mode toggle, LAN URL display, and connection status indicators (completed 2026-05-06)
 - [ ] **Phase 9: Companion CLI Server** - `npx noisium` starts a local HTTP + WebSocket relay server with LAN IP detection and zero-config startup
 
 </details>
@@ -151,5 +151,5 @@ Plans:
 | 5. Polish Broadcast Architecture | v1.0 | 1/1 | Complete | 2026-05-06 |
 | 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 7. Export + Confetti | v1.1 | 2/2 | Complete | 2026-05-06 |
-| 8. Transport Abstraction + Host Connection UX | 2/3 | In Progress|  | - |
+| 8. Transport Abstraction + Host Connection UX | 3/3 | Complete   | 2026-05-06 | - |
 | 9. Companion CLI Server | v1.2 | 0/TBD | Not started | - |

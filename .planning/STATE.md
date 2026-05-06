@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: MVP
 status: planning
-stopped_at: Completed 08-transport-abstraction-host-connection-ux/08-03-PLAN.md
-last_updated: "2026-05-06T20:16:51.165Z"
+stopped_at: Completed 08-transport-abstraction-host-connection-ux/08-02-PLAN.md
+last_updated: "2026-05-06T20:21:22.498Z"
 last_activity: 2026-05-06 — v1.2 roadmap created (Phases 8–9)
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -51,6 +51,7 @@ Next step: `/gsd:plan-phase 8`
 *Updated after each plan completion*
 | Phase 08-transport-abstraction-host-connection-ux P01 | 5 | 2 tasks | 5 files |
 | Phase 08-transport-abstraction-host-connection-ux P03 | 8 | 2 tasks | 4 files |
+| Phase 08-transport-abstraction-host-connection-ux P02 | 8min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,8 @@ Recent decisions affecting current work:
 - [Phase 08-transport-abstraction-host-connection-ux]: lanModeEnabled survives clearSession — device preference, not session data
 - [Phase 08-transport-abstraction-host-connection-ux]: ProjectorView accesses WS lifecycle via cast to _ws — no onStatusChange added to transport (scope preserved)
 - [Phase 08-transport-abstraction-host-connection-ux]: retryDelayRef doubles in setTimeout callback ensuring doubling tracks actual retry attempts not rapid-close sequences
+- [Phase 08-transport-abstraction-host-connection-ux]: BroadcastBridge accesses transport._ws directly for WS lifecycle hooks (no onStatusChange in transport.ts)
+- [Phase 08-transport-abstraction-host-connection-ux]: Use vi.spyOn on store action for cross-describe WS status verification (store state reads are flaky with async React flushing)
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-06T20:16:51.160Z
-Stopped at: Completed 08-transport-abstraction-host-connection-ux/08-03-PLAN.md
+Last session: 2026-05-06T20:21:22.495Z
+Stopped at: Completed 08-transport-abstraction-host-connection-ux/08-02-PLAN.md
 Resume file: None
