@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: MVP
 status: Roadmap created. Phase 6 (Per-Demo Metadata) and Phase 7 (Export + Confetti) defined. No plans written yet.
-stopped_at: Completed 06-per-demo-metadata/06-02-PLAN.md
-last_updated: "2026-05-06T15:50:54.385Z"
+stopped_at: Completed 07-export-confetti/07-02-PLAN.md
+last_updated: "2026-05-06T16:21:47.493Z"
 last_activity: 2026-05-06 — v1.1 roadmap created
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Next step: `/gsd:plan-phase 6`
 *Updated after each plan completion*
 | Phase 06-per-demo-metadata P01 | 2 | 2 tasks | 4 files |
 | Phase 06-per-demo-metadata P02 | 4 | 2 tasks | 5 files |
+| Phase 07-export-confetti P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,7 @@ Recent decisions affecting current work:
 - [Phase 06-per-demo-metadata]: ProjectorMessageState.demos extended to include subject?/logoUrl? so deriveProjectorMessage can read metadata without coupling to the full Demo type from useAppStore
 - [Phase 06-per-demo-metadata]: FileReader mock uses class (not vi.fn()) as constructor — vi.fn() cannot be used with new in vitest
 - [Phase 06-per-demo-metadata]: requestAnimationFrame mock returns fake ID without calling callback — prevents infinite recursion from ProjectorSuspense rAF loop
+- [Phase 07-export-confetti]: Hand-rolled Canvas RAF confetti (no npm library) wired into ProjectorReveal via active prop; jsdom guard and structural-only tests; z-index stacking with position:relative container
 
 ### Pending Todos
 
@@ -85,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-06T15:48:39.066Z
-Stopped at: Completed 06-per-demo-metadata/06-02-PLAN.md
+Last session: 2026-05-06T16:21:47.490Z
+Stopped at: Completed 07-export-confetti/07-02-PLAN.md
 Resume file: None

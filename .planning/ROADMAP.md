@@ -97,4 +97,4 @@ Plans:
 | 4. Two-Surface Architecture | v1.0 | 5/5 | Complete | 2026-05-06 |
 | 5. Polish Broadcast Architecture | v1.0 | 1/1 | Complete | 2026-05-06 |
 | 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
-| 7. Export + Confetti | v1.1 | 0/2 | Not started | - |
+| 7. Export + Confetti | 1/2 | In Progress|  | - |
