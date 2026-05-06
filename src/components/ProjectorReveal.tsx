@@ -1,3 +1,5 @@
+import { ConfettiCanvas } from './ConfettiCanvas';
+
 interface Props {
   winner: { name: string } | { names: string[] };
   /** Internal projector state: 'buildup' for ~2.5s, then 'name' for the rest. */
@@ -17,41 +19,47 @@ export function ProjectorReveal({ winner, displayPhase }: Props) {
   const buildupText = isTie ? 'Tied for the win:' : 'And the winner is…';
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-16 text-center">
-      {displayPhase === 'buildup' && (
-        <p className="text-5xl font-light text-gray-600 italic">{buildupText}</p>
-      )}
-      {displayPhase === 'name' && (
-        <>
-          {isTie ? (
-            <>
-              <p className="text-4xl font-light text-gray-600 mb-12">{buildupText}</p>
-              <div className="flex flex-wrap gap-12 justify-center">
-                {winner.names.map((n) => (
-                  <p
-                    key={n}
-                    className="text-7xl font-black text-gray-900"
-                    style={{
-                      animation: 'noisium-fade-in 0.6s ease-out forwards',
-                    }}
-                  >
-                    {n}
-                  </p>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p
-              className="text-9xl font-black text-gray-900"
-              style={{
-                animation: 'noisium-fade-in 0.6s ease-out forwards',
-              }}
-            >
-              {winner.name}
-            </p>
-          )}
-        </>
-      )}
+    <div
+      className="min-h-screen bg-white flex flex-col items-center justify-center px-16 text-center"
+      style={{ position: 'relative' }}
+    >
+      <ConfettiCanvas active={displayPhase === 'name'} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {displayPhase === 'buildup' && (
+          <p className="text-5xl font-light text-gray-600 italic">{buildupText}</p>
+        )}
+        {displayPhase === 'name' && (
+          <>
+            {isTie ? (
+              <>
+                <p className="text-4xl font-light text-gray-600 mb-12">{buildupText}</p>
+                <div className="flex flex-wrap gap-12 justify-center">
+                  {winner.names.map((n) => (
+                    <p
+                      key={n}
+                      className="text-7xl font-black text-gray-900"
+                      style={{
+                        animation: 'noisium-fade-in 0.6s ease-out forwards',
+                      }}
+                    >
+                      {n}
+                    </p>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p
+                className="text-9xl font-black text-gray-900"
+                style={{
+                  animation: 'noisium-fade-in 0.6s ease-out forwards',
+                }}
+              >
+                {winner.name}
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
