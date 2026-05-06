@@ -15,6 +15,7 @@ export function createNoisiumServer(distDir, port) {
     const wss = attachRelay(server);
 
     server.on('error', reject);
+    wss.on('error', reject);
 
     server.listen(port, '127.0.0.1', () => {
       resolve({ server, wss, port: server.address().port });

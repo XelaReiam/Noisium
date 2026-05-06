@@ -92,11 +92,11 @@ export class WebSocketTransport implements NoisiumTransport {
     // Callers should check wsConnectionStatus before sending.
   }
 
-  addEventListener(type: 'message', listener: (event: MessageEvent) => void): void {
+  addEventListener(_type: 'message', listener: (event: MessageEvent) => void): void {
     this._listeners.add(listener);
   }
 
-  removeEventListener(type: 'message', listener: (event: MessageEvent) => void): void {
+  removeEventListener(_type: 'message', listener: (event: MessageEvent) => void): void {
     this._listeners.delete(listener);
   }
 
