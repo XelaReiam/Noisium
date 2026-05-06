@@ -1,36 +1,37 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: completed
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-05-06T11:29:41.551Z"
-last_activity: 2026-05-06 — Phase 4 Plan 5 complete (two-surface host UI + manual E2E verification, all 26 requirements verified)
+milestone_name: MVP
+status: Roadmap created. Phase 6 (Per-Demo Metadata) and Phase 7 (Export + Confetti) defined. No plans written yet.
+stopped_at: Completed 06-per-demo-metadata/06-01-PLAN.md
+last_updated: "2026-05-06T15:43:40.788Z"
+last_activity: 2026-05-06 — v1.1 roadmap created
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 20
-  completed_plans: 20
-  percent: 100
+  total_phases: 2
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-05)
+See: .planning/PROJECT.md (updated 2026-05-06)
 
 **Core value:** The host can run a multi-demo applause contest end-to-end on a single laptop, with each demo's score captured fairly and the winner revealed with confidence.
-**Current focus:** v1.0 COMPLETE — all 4 phases and all 26 requirements delivered and verified
+**Current focus:** v1.1 — per-demo metadata, export, confetti
 
 ## Current Position
 
-Phase: 4 of 4 (Two-Surface Architecture) — COMPLETE
-Plan: 5 of 5 in current phase (all done)
-Status: Plan 04-05 complete — ProjectorToolbar + HostView wire-up + manual E2E sign-off on all 6 Phase 4 requirements on deployed URL. v1.0 milestone achieved.
-Last activity: 2026-05-06 — Phase 4 Plan 5 complete (two-surface host UI + manual E2E verification, all 26 requirements verified)
+Milestone: v1.1 Metadata + Export — PLANNING
+Status: Roadmap created. Phase 6 (Per-Demo Metadata) and Phase 7 (Export + Confetti) defined. No plans written yet.
+Last activity: 2026-05-06 — v1.1 roadmap created
 
-Progress: [██████████] 100%
+Progress: [__________] 0%
+
+Next step: `/gsd:plan-phase 6`
 
 ## Performance Metrics
 
@@ -43,29 +44,13 @@ Progress: [██████████] 100%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-scaffold-state-layer | 3 | ~8min | ~3min |
-| 02-audio-pipeline | 3 | ~10min | ~3min |
 
 **Recent Trend:**
-- Last 5 plans: fast
-- Trend: stable
+- Last 5 plans: -
+- Trend: -
 
 *Updated after each plan completion*
-| Phase 01-scaffold-state-layer P01 | 4 | 2 tasks | 14 files |
-| Phase 01-scaffold-state-layer P02 | 2min | 2 tasks | 3 files |
-| Phase 02-audio-pipeline P01 | 3min | 3 tasks | 10 files |
-| Phase 02-audio-pipeline P02 | 4min | 2 tasks | 2 files |
-| Phase 02-audio-pipeline P03 | 3min | 3 tasks | 5 files |
-| Phase 02-audio-pipeline P04 | 2min | 2 tasks | 8 files |
-| Phase 03-calibration-measurement-show-control P01 | 2min | 3 tasks | 3 files |
-| Phase 03-calibration-measurement-show-control P02 | 4 | 2 tasks | 2 files |
-| Phase 03-calibration-measurement-show-control P03 | 3min | 2 tasks | 3 files |
-| Phase 03-calibration-measurement-show-control P04 | 2min | 3 tasks | 3 files |
-| Phase 03-calibration-measurement-show-control P05 | 3min | 4 tasks | 5 files |
-| Phase 03-calibration-measurement-show-control P06 | ~2h | 3 tasks | 2 files |
-| Phase 04-two-surface-architecture P02 | 5min | 1 tasks | 2 files |
-| Phase 04 P05 | 30min | 4 tasks | 3 files |
-| Phase 05-polish-broadcast-architecture P01 | 4min | 3 tasks | 7 files |
+| Phase 06-per-demo-metadata P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,57 +59,16 @@ Progress: [██████████] 100%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Roadmap: 4-phase structure derived from requirements — audio pipeline before any UI, calibration+measurement in same phase, BroadcastChannel split after store shape is locked
-- Architecture: AudioContext held in React ref (not state), getFloatTimeDomainData only, wall-clock window boundaries via performance.now()
-- Deployment: GitHub Pages with HashRouter; base `/noisium/` in vite.config.ts
-- [Phase 01-scaffold-state-layer]: Repo made public to enable GitHub Pages on free plan; scaffold via temp-dir copy due to non-pipeable interactive prompts; named export App for plan-03 SecureContextBlocker wrapping; Tailwind v4 via @tailwindcss/vite only (no config files)
-- [Phase 01-scaffold-state-layer]: No onRehydrateStorage: state setter calls inside it are overwritten by Zustand post-rehydrate merge (bugs #1527/#1688/#1691); cross-day logic goes in plan 01-03 useEffect
-- [Phase 01-scaffold-state-layer]: partialize lists only windowSeconds + sessionDate explicitly — transients and action functions excluded to prevent silent null serialization
-- [Phase 01-scaffold-state-layer]: Storage probe at main.tsx module level before createRoot: avoids StrictMode double-render banner flicker
-- [Phase 01-scaffold-state-layer P03]: SecureContextBlocker wraps RouterProvider (not vice versa) so HTTP check fires before any routing or store reads
-- [Phase 01-scaffold-state-layer P03]: createHashRouter has no basename — Vite base and HashRouter basename are orthogonal; combining them double-encodes the path prefix
-- [Phase 01-scaffold-state-layer P03]: CrossDayCheckEffect is a render-null component with useEffect — keeps cross-day side-effect isolated from presentational HostView
-- [Phase 01-scaffold-state-layer P03]: Start fresh is default-focused in CrossDayModal so Enter key always triggers the safe (clear) action on first render
-- [Phase 02-audio-pipeline P01]: Vitest 4.x installed (4.1.5, not 3.x) — exits code 1 with no test files; added --passWithNoTests to test script
-- [Phase 02-audio-pipeline P01]: globalThis used instead of global in setup.ts — TS DOM lib does not declare 'global' as a name; globalThis is cross-env
-- [Phase 02-audio-pipeline P01]: verifyAgcConstraints uses === true strictly — Safari omits autoGainControl from track.getSettings(); truthy check causes false positive
-- [Phase 02-audio-pipeline P01]: detectBrowser uses userAgentData presence as primary Chromium signal — Firefox and Safari do not implement it (confirmed 2026)
-- [Phase 02-audio-pipeline]: erasableSyntaxOnly disallows constructor parameter properties — used explicit field declaration + this.x = x pattern
-- [Phase 02-audio-pipeline]: MediaTrackSettings.echoCancellation is string|boolean|undefined — extract boolean-only fields before passing to verifyAgcConstraints
-- [Phase 02-audio-pipeline]: Float32Array<ArrayBuffer> explicit annotation required in TS 5.7+ — new Float32Array(size) infers Float32Array<ArrayBufferLike>
-- [Phase 02-audio-pipeline P03]: MicPermission re-exported from useAppStore — consumers import from one place, not both store and audioEngine
-- [Phase 02-audio-pipeline P03]: wirePermissionLoss is async (returns Promise<() => void>) — permissions.query is async; cleanup captures PermissionStatus object
-- [Phase 02-audio-pipeline P03]: useAudioEngine uses empty dep array with eslint-disable — Zustand setters are module-stable; including them in deps is a false-positive
-- [Phase 02-audio-pipeline P03]: clearSession() resets mic fields without touching engine — MicPanel useEffect (Plan 02-04) handles engine teardown by watching micPermission === 'idle'
-- [Phase 02-audio-pipeline]: window.__noisiumDisposeEngine bridge for CrossDayModal engine teardown — avoids coupling Zustand to runtime AudioEngine instances
-- [Phase 02-audio-pipeline]: getLevelRef.current pattern for stable rAF getter — prevents LevelIndicator rAF loop restart on every parent re-render
-- [Phase 02-audio-pipeline]: All mic-panel leaf components are props-only (no store/engine imports) — orchestration lives entirely in MicPanel
-- [Phase 03-calibration-measurement-show-control]: measurement.ts centralizes all Phase 3 math as pure functions — no React, no Web Audio, no Zustand; fully testable in jsdom; single source of truth for dbFsFromRms, computeDelta, getNormalizedScore, getDemoStatus
-- [Phase 03-calibration-measurement-show-control]: partialize-invariant test updated in Wave 0 (03-01) before store extension (03-02) — intentionally RED test pre-declares Phase 3 storage contract; as-any cast is pragmatic bridge removed by 03-02
-- [Phase 03-calibration-measurement-show-control]: moveDemo uses up/down direction enum rather than reorderDemos full-array swap — fits planned arrow-button UI in 03-04 without requiring UI to reconstruct full reordered array
-- [Phase 03-calibration-measurement-show-control]: confirmRedo does NOT call startMeasure — calling component (03-05) owns sequencing; abortReasonToMessage at module scope is single source of truth for abort copy; completeMeasure removes demo from skippedDemoIds (measured demo supersedes skip)
-- [Phase 03-calibration-measurement-show-control]: setInterval(33ms) for measurement sampling (not rAF) — avoids frame contention with existing VU loop; addEventListener('statechange') not onstatechange= — additive, preserves future Phase 2 wiring; performance.now() for wall-clock window boundary; dbFsFromRms imported from measurement.ts only
-- [Phase 03-calibration-measurement-show-control]: Up/down arrow buttons for reorder (not HTML5 drag-and-drop) — simpler code, fits moveDemo direction enum
-- [Phase 03-calibration-measurement-show-control]: Redo confirm is inline bar within the row (not modal) — transforms score area in place on requestRedo
-- [Phase 03-calibration-measurement-show-control]: onMeasure prop injected into DemoCard/DemoListEditor — measurement orchestration owned by Plan 03-05, not the card
-- [Phase 03-calibration-measurement-show-control]: Two useEffects in MeasurementOrchestrator: main run effect + abortMessage observer — necessary because engine resolves after store already updated abortMeasure
-- [Phase 03-calibration-measurement-show-control]: abortReasonRef tracking: sets 'device-change' before calling controller.abort() so store gets precise reason (engine always returns 'manual' for signal-triggered aborts)
-- [Phase 03-calibration-measurement-show-control]: CountdownOverlay renders AbortWarning in same DOM slot (both absolute inset-0) — orchestrator switches phase.kind; no unmount/remount flicker
-- [Phase 03-calibration-measurement-show-control P06]: AudioEngine promoted to module-level singleton — all consumers (MicPanel, CalibrateButton, MeasurementOrchestrator) share one permission-granted engine; per-component instantiation was silently breaking calibration and measurement
-- [Phase 03-calibration-measurement-show-control P06]: WindowPicker unselected text bumped from text-gray-500 to text-gray-700 for WCAG AA contrast (Lighthouse audit on deployed URL flagged insufficient ratio)
-- [Phase 03-calibration-measurement-show-control P06]: MeasurementOrchestrator mounted as last child of relative-positioned main so absolute inset-0 overlay covers exactly the main area; PersistenceBanner above main stays visible during measurement
-- [Phase 04-two-surface-architecture P01]: MockBroadcastChannel added to setup.ts globalThis (not per-file vi.mock) — jsdom 29.1.1 has no BroadcastChannel; global assignment covers all transitively importing test files
-- [Phase 04-two-surface-architecture P01]: reveal-buildup kept in ProjectorMessage union as projector-internal-only variant — host invariant test asserts deriveProjectorMessage never returns it (04-RESEARCH.md Pitfall 4)
-- [Phase 04-two-surface-architecture P01]: ProjectorMessageState interface decoupled from useAppStore — avoids circular import when Plan 02 adds revealWinner using deriveWinner return type; enables pure synchronous testing
-- [Phase 04-two-surface-architecture]: Staleness timer (_projectorStaleTimer) lives at module scope — storing setTimeout IDs in Zustand state is unusual; module-level gives deterministic clearTimeout from refreshProjectorHeartbeat and clearSession
-- [Phase 04-two-surface-architecture]: measurePhase resets inside completeMeasure (not separate orchestrator action) — keeps store internally consistent; orchestrator handles window-end display tick before calling completeMeasure
-- [Phase 04-two-surface-architecture P04]: BroadcastBridge uses JSON.stringify comparison of last sent message for deduplication — prevents identical consecutive store updates from broadcasting unchanged ProjectorMessage
-- [Phase 04-two-surface-architecture P04]: CalibrateButton broadcasts calibrating/idle directly to channel (not via store+BroadcastBridge) — calibration is a UI-owned atomic flow with no Zustand transient field needed
-- [Phase 04-two-surface-architecture P04]: MeasurementOrchestrator defers completeMeasure by 1200ms (WINDOW_END_HOLD_MS) after setMeasurePhase('window-end') — BroadcastBridge broadcasts window-end; projector's own 1200ms timer runs harmoniously before idle arrives
-- [Phase 04]: ProjectorToolbar standalone TDD-tested component keeps HostView clean and allows isolated unit testing
-- [Phase 04]: header strip separate from main so MeasurementOrchestrator absolute overlay covers exactly main, not the header
-- [Phase 04]: BroadcastBridge mounted as render-null sibling before visible UI tree, consistent with CrossDayCheckEffect pattern
-- [Phase 05-polish-broadcast-architecture]: All BroadcastChannel posts now flow through BroadcastBridge via store writes; calibrating added to measurePhase union; CalibrateButton enabled on micPermission alone (TD-2 + TD-3 closed)
+- Roadmap: 2-phase structure — metadata (Phase 6) and export+confetti (Phase 7) derived from v1.1 requirements
+- Architecture context: React 19 + TypeScript + Vite + Tailwind v4 + Zustand; each demo is `{ id: string; name: string }` in store — META-01/META-02 extend this shape
+- BroadcastBridge derives ProjectorMessage from store; the 'measuring' variant will need subject + logoUrl fields to satisfy META-03
+- Logo files uploaded by host must be converted to data URLs (FileReader) before localStorage storage (META-02, META-04)
+- partialize in Zustand persist must include new demo fields (subject, logoUrl) or META-04 will silently fail
+- confetti (PROJ-05) is projector-only, triggered on the 'reveal' screen in ProjectorReveal.tsx — does not touch host view
+- v1.0 archived: 26/26 requirements satisfied, Lighthouse 100/100/100/90, deployed at https://xelareiam.github.io/Noisium/
+- [Phase 06-per-demo-metadata]: partialize unchanged — demos array already included; subject/logoUrl persist inside demo objects automatically without a new top-level localStorage key
+- [Phase 06-per-demo-metadata]: Conditional spread with truthy check omits keys entirely when subject/logoUrl are undefined or empty string — no undefined-valued keys in broadcast payload
+- [Phase 06-per-demo-metadata]: ProjectorMessageState.demos extended to include subject?/logoUrl? so deriveProjectorMessage can read metadata without coupling to the full Demo type from useAppStore
 
 ### Pending Todos
 
@@ -132,11 +76,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 2 risk: AGC constraint application can vary by Windows audio driver — must test `track.getSettings()` on the actual event laptop (not just dev). Log `audioContext.sampleRate` at startup.
-- Phase 4 risk: Multi-monitor window migration on Windows must be tested on actual hardware. `/projector` URL design mitigates lost projector window but must be verified.
+- META-02: FileReader is async; ensure logo upload UX handles in-progress state so host cannot accidentally submit before conversion completes
+- META-04: localStorage quota is finite — very large logo images (high-res photos) could hit quota. Consider resizing or capping file size at upload time.
+- PROJ-05: Verify chosen confetti library (or hand-rolled Canvas/CSS) does not block the main thread for the winner-reveal transition duration
 
 ## Session Continuity
 
-Last session: 2026-05-06T11:29:41.548Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-05-06T15:43:40.785Z
+Stopped at: Completed 06-per-demo-metadata/06-01-PLAN.md
 Resume file: None

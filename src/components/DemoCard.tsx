@@ -1,3 +1,4 @@
+import React from 'react';
 import { clsx } from 'clsx';
 import { useAppStore, type Demo, type Score } from '../store/useAppStore';
 import { getDemoStatus, getNormalizedScore } from '../lib/measurement';
@@ -67,6 +68,9 @@ export function DemoCard({
   const confirmRedo = useAppStore((s) => s.confirmRedo);
   const removeDemo = useAppStore((s) => s.removeDemo);
   const renameDemo = useAppStore((s) => s.renameDemo);
+  const updateDemoMeta = useAppStore((s) => s.updateDemoMeta);
+
+  const [logoError, setLogoError] = React.useState<string | null>(null);
 
   const status = getDemoStatus(demo.id, measuringDemoId, abortedDemoId, scores, skippedDemoIds);
   const score: Score | undefined = scores[demo.id];
@@ -82,6 +86,26 @@ export function DemoCard({
   // (the confirm bar is owned by THIS card and should still respond to its own buttons,
   // but during measurement nothing should be clickable). globallyDisabled wins.
   const baseDisabled = globallyDisabled;
+
+  function handleSubjectBlur(e: React.FocusEvent<HTMLInputElement>): void {
+    const next = e.currentTarget.value;
+    updateDemoMeta(demo.id, { subject: next.trim() || undefined });
+  }
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 200 * 1024) {
+      setLogoError('Logo must be under 200 KB');
+      return;
+    }
+    setLogoError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateDemoMeta(demo.id, { logoUrl: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  }
 
   function handleRenameBlur(e: React.FocusEvent<HTMLInputElement>): void {
     const next = e.currentTarget.value;
@@ -127,6 +151,39 @@ export function DemoCard({
         >
           &times;
         </button>
+      </div>
+
+      {/* Metadata row: subject + logo — always visible, disabled during measurement */}
+      <div className="flex items-center gap-3 mt-2">
+        <input
+          type="text"
+          defaultValue={demo.subject ?? ''}
+          onBlur={handleSubjectBlur}
+          placeholder="Subject (e.g. app name)"
+          aria-label={`Subject for ${demo.name}`}
+          className="flex-1 min-w-0 px-2 py-1 text-xs bg-transparent border-b border-transparent hover:border-gray-200 focus:border-gray-400 focus:outline-none text-gray-600"
+        />
+        <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer shrink-0">
+          Logo
+          <input
+            key={demo.logoUrl ?? 'empty'}
+            type="file"
+            accept="image/*"
+            onChange={handleLogoChange}
+            className="sr-only"
+            aria-label={`Upload logo for ${demo.name}`}
+          />
+        </label>
+        {demo.logoUrl && (
+          <img
+            src={demo.logoUrl}
+            alt={`${demo.name} logo preview`}
+            className="h-6 w-6 object-contain rounded"
+          />
+        )}
+        {logoError && (
+          <span className="text-xs text-red-600">{logoError}</span>
+        )}
       </div>
 
       {/* Score row + action row */}
