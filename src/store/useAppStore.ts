@@ -55,6 +55,11 @@ export interface AppState {
   revealWinner: { name: string } | { names: string[] } | null;
   projectorConnected: boolean;
 
+  // Phase 8 — persisted device preference
+  lanModeEnabled: boolean;
+  // Phase 8 — transient WS link state
+  wsConnectionStatus: 'idle' | 'waiting' | 'connected' | 'disconnected' | 'reconnecting';
+
   // -- Actions ----
   setWindowSeconds: (s: WindowSeconds) => void;
   setSessionDate: (date: string) => void;
@@ -99,6 +104,10 @@ export interface AppState {
   resetReveal: () => void;
   setProjectorConnected: (connected: boolean) => void;
   refreshProjectorHeartbeat: () => void;
+
+  // Phase 8 actions
+  setLanModeEnabled: (enabled: boolean) => void;
+  setWsConnectionStatus: (status: AppState['wsConnectionStatus']) => void;
 }
 
 // Module-level: holds the pending heartbeat-staleness timer so we can clear it
@@ -153,6 +162,10 @@ export const useAppStore = create<AppState>()(
       revealActive: false,
       revealWinner: null,
       projectorConnected: false,
+
+      // Phase 8 defaults
+      lanModeEnabled: false,
+      wsConnectionStatus: 'idle',
 
       // -- Phase 1 setters ----
       setWindowSeconds: (s) => set({ windowSeconds: s }),
@@ -322,6 +335,10 @@ export const useAppStore = create<AppState>()(
         set({ projectorConnected: true });
       },
 
+      // -- Phase 8 actions ----
+      setLanModeEnabled: (enabled) => set({ lanModeEnabled: enabled }),
+      setWsConnectionStatus: (status) => set({ wsConnectionStatus: status }),
+
       // -- clearSession (extends Phase 2's reset) ----
       clearSession: () => {
         // Clear the stale heartbeat timer to prevent a stale timer from firing
@@ -353,6 +370,9 @@ export const useAppStore = create<AppState>()(
           revealActive: false,
           revealWinner: null,
           projectorConnected: false,
+          // lanModeEnabled intentionally excluded — device preference, survives session clear
+          // wsConnectionStatus resets to idle on session clear (fresh connection state)
+          wsConnectionStatus: 'idle',
         });
       },
     }),
@@ -363,12 +383,14 @@ export const useAppStore = create<AppState>()(
       // Transient fields (calibrationAmbientDb, measuringDemoId, abortedDemoId,
       // abortMessage, redoConfirmDemoId, and all Phase 1+2 transients) remain excluded.
       // Phase 4: partialize unchanged — every Phase 4 field is transient.
+      // Phase 8: lanModeEnabled added (device preference, persisted). wsConnectionStatus excluded (transient).
       partialize: (state) => ({
         windowSeconds: state.windowSeconds,
         sessionDate: state.sessionDate,
         demos: state.demos,
         scores: state.scores,
         skippedDemoIds: state.skippedDemoIds,
+        lanModeEnabled: state.lanModeEnabled,
       }),
     },
   ),

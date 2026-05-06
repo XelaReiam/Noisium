@@ -30,6 +30,9 @@ beforeEach(() => {
     revealActive: false,
     revealWinner: null,
     projectorConnected: false,
+    // Phase 8
+    lanModeEnabled: false,
+    wsConnectionStatus: 'idle',
   });
 });
 
@@ -95,8 +98,10 @@ describe('useAppStore — partialize invariant (Phase 3 shape)', () => {
     // Persisted shape: { state: {...}, version: 0 }
     const stateKeys = Object.keys(parsed.state).sort();
     // Phase 3 expanded shape: original two keys + demos + scores + skippedDemoIds
+    // Phase 8: lanModeEnabled added as persisted device preference
     expect(stateKeys).toEqual([
       'demos',
+      'lanModeEnabled',
       'scores',
       'sessionDate',
       'skippedDemoIds',
@@ -596,10 +601,11 @@ describe('useAppStore — updateDemoMeta (META-01 / META-02)', () => {
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw as string);
 
-    // Top-level persisted keys must remain exactly the same five
+    // Top-level persisted keys (Phase 8: lanModeEnabled added)
     const stateKeys = Object.keys(parsed.state).sort();
     expect(stateKeys).toEqual([
       'demos',
+      'lanModeEnabled',
       'scores',
       'sessionDate',
       'skippedDemoIds',
@@ -623,8 +629,8 @@ describe('useAppStore — updateDemoMeta (META-01 / META-02)', () => {
   });
 });
 
-describe('Phase 4: partialize invariant unchanged', () => {
-  it('persists ONLY windowSeconds, sessionDate, demos, scores, skippedDemoIds', () => {
+describe('Phase 4: partialize invariant — Phase 4 transients excluded', () => {
+  it('persists windowSeconds, sessionDate, demos, scores, skippedDemoIds, lanModeEnabled (Phase 8)', () => {
     // Set Phase 4 transients to non-defaults to be certain they don't bleed.
     useAppStore.getState().setMeasurePhase('measuring');
     useAppStore.getState().setProjectorConnected(true);
@@ -640,6 +646,7 @@ describe('Phase 4: partialize invariant unchanged', () => {
     const persistedKeys = Object.keys(parsed.state).sort();
     expect(persistedKeys).toEqual([
       'demos',
+      'lanModeEnabled',
       'scores',
       'sessionDate',
       'skippedDemoIds',
@@ -650,5 +657,98 @@ describe('Phase 4: partialize invariant unchanged', () => {
     expect(parsed.state).not.toHaveProperty('revealActive');
     expect(parsed.state).not.toHaveProperty('revealWinner');
     expect(parsed.state).not.toHaveProperty('projectorConnected');
+    // Phase 8 transient is absent too
+    expect(parsed.state).not.toHaveProperty('wsConnectionStatus');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Phase 8: lanModeEnabled + wsConnectionStatus
+// ─────────────────────────────────────────────────────────────
+
+describe('useAppStore — Phase 8 defaults', () => {
+  it('lanModeEnabled defaults to false', () => {
+    expect(useAppStore.getState().lanModeEnabled).toBe(false);
+  });
+
+  it('wsConnectionStatus defaults to "idle"', () => {
+    expect(useAppStore.getState().wsConnectionStatus).toBe('idle');
+  });
+});
+
+describe('useAppStore — setLanModeEnabled', () => {
+  it('sets lanModeEnabled to true', () => {
+    useAppStore.getState().setLanModeEnabled(true);
+    expect(useAppStore.getState().lanModeEnabled).toBe(true);
+  });
+
+  it('sets lanModeEnabled to false', () => {
+    useAppStore.getState().setLanModeEnabled(true);
+    useAppStore.getState().setLanModeEnabled(false);
+    expect(useAppStore.getState().lanModeEnabled).toBe(false);
+  });
+});
+
+describe('useAppStore — setWsConnectionStatus', () => {
+  it('sets wsConnectionStatus to "waiting"', () => {
+    useAppStore.getState().setWsConnectionStatus('waiting');
+    expect(useAppStore.getState().wsConnectionStatus).toBe('waiting');
+  });
+
+  it('sets wsConnectionStatus to "connected"', () => {
+    useAppStore.getState().setWsConnectionStatus('connected');
+    expect(useAppStore.getState().wsConnectionStatus).toBe('connected');
+  });
+
+  it('sets wsConnectionStatus to "disconnected"', () => {
+    useAppStore.getState().setWsConnectionStatus('disconnected');
+    expect(useAppStore.getState().wsConnectionStatus).toBe('disconnected');
+  });
+
+  it('sets wsConnectionStatus to "reconnecting"', () => {
+    useAppStore.getState().setWsConnectionStatus('reconnecting');
+    expect(useAppStore.getState().wsConnectionStatus).toBe('reconnecting');
+  });
+});
+
+describe('Phase 8: partialize includes lanModeEnabled, excludes wsConnectionStatus', () => {
+  it('lanModeEnabled is in the persisted keys', () => {
+    useAppStore.getState().setLanModeEnabled(true);
+    const raw = localStorage.getItem('noisium:state');
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state).toHaveProperty('lanModeEnabled', true);
+  });
+
+  it('wsConnectionStatus is NOT in the persisted keys', () => {
+    useAppStore.getState().setWsConnectionStatus('connected');
+    const raw = localStorage.getItem('noisium:state');
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state).not.toHaveProperty('wsConnectionStatus');
+  });
+
+  it('persisted keys include lanModeEnabled alongside existing keys', () => {
+    useAppStore.getState().setLanModeEnabled(true);
+    const raw = localStorage.getItem('noisium:state');
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    const persistedKeys = Object.keys(parsed.state).sort();
+    expect(persistedKeys).toEqual([
+      'demos',
+      'lanModeEnabled',
+      'scores',
+      'sessionDate',
+      'skippedDemoIds',
+      'windowSeconds',
+    ]);
+  });
+});
+
+describe('Phase 8: clearSession does NOT reset lanModeEnabled', () => {
+  it('lanModeEnabled survives clearSession', () => {
+    useAppStore.getState().setLanModeEnabled(true);
+    useAppStore.getState().clearSession();
+    expect(useAppStore.getState().lanModeEnabled).toBe(true);
   });
 });
