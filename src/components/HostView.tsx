@@ -6,11 +6,22 @@ import { WindowPicker } from './WindowPicker';
 import { CalibrateButton } from './CalibrateButton';
 import { DemoListEditor } from './DemoListEditor';
 import { MeasurementOrchestrator } from './MeasurementOrchestrator';
+import { BroadcastBridge } from './BroadcastBridge';
+import { ProjectorToolbar } from './ProjectorToolbar';
 import { useAppStore } from '../store/useAppStore';
+import { canRevealWinner } from '../lib/projector';
+import { clsx } from 'clsx';
 
 export function HostView() {
   const calibrationAmbientDb = useAppStore((s) => s.calibrationAmbientDb);
   const startMeasure = useAppStore((s) => s.startMeasure);
+  // Phase 4 reads:
+  const demos = useAppStore((s) => s.demos);
+  const scores = useAppStore((s) => s.scores);
+  const skippedDemoIds = useAppStore((s) => s.skippedDemoIds);
+  const revealActive = useAppStore((s) => s.revealActive);
+  const triggerReveal = useAppStore((s) => s.triggerReveal);
+  const resetReveal = useAppStore((s) => s.resetReveal);
 
   // The DemoListEditor's "Measure" buttons call back here. We just delegate
   // to the store; the MeasurementOrchestrator picks up the measuringDemoId
@@ -19,11 +30,20 @@ export function HostView() {
     startMeasure(demoId);
   };
 
+  const canReveal = canRevealWinner(demos, scores, skippedDemoIds);
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <PersistenceBanner />
       <CrossDayCheckEffect />
       <CrossDayModal />
+      {/* Phase 4: render-null host-side broadcast relay */}
+      <BroadcastBridge />
+
+      {/* Phase 4: header strip with projector toolbar */}
+      <header className="px-4 py-2 border-b border-gray-100 flex justify-end">
+        <ProjectorToolbar />
+      </header>
 
       {/*
         Main area is `relative` so MeasurementOrchestrator's CountdownOverlay
@@ -57,6 +77,39 @@ export function HostView() {
             />
           </div>
         </section>
+
+        {/* Phase 4: Reveal winner button — gated by canRevealWinner */}
+        <div className="flex flex-col items-center gap-2 mt-2">
+          <button
+            type="button"
+            onClick={triggerReveal}
+            disabled={!canReveal || revealActive}
+            className={clsx(
+              'px-6 py-3 rounded text-base font-semibold transition-colors',
+              !canReveal || revealActive
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-900 text-white hover:bg-gray-800',
+            )}
+          >
+            Reveal winner
+          </button>
+          {!canReveal && !revealActive && demos.length > 0 && (
+            <p className="text-xs text-gray-500">
+              Measure every non-skipped demo to enable reveal.
+            </p>
+          )}
+        </div>
+
+        {/* Phase 4: Reset / New event — visible only post-reveal */}
+        {revealActive && (
+          <button
+            type="button"
+            onClick={resetReveal}
+            className="px-4 py-2 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Reset / New event
+          </button>
+        )}
 
         {/* Render-effect components — invisible, but MeasurementOrchestrator
             renders the countdown overlay (absolute inset-0) when measuring. */}
