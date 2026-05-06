@@ -39,7 +39,7 @@ export type ProjectorMessage =
   | { phase: 'idle' }
   | { phase: 'calibrating' }
   | { phase: 'countdown'; demoName: string; countdownSeconds: number }
-  | { phase: 'measuring'; demoName: string; remainingSeconds: number }
+  | { phase: 'measuring'; demoName: string; remainingSeconds: number; demoSubject?: string; demoLogoUrl?: string }
   | { phase: 'window-end'; demoName: string }
   | { phase: 'reveal-buildup' } // Projector-internal only — host never posts this; reserved for projector's display state machine
   | { phase: 'reveal'; winner: { name: string } | { names: string[] } }
@@ -55,7 +55,7 @@ export type ProjectorReplyMessage =
  * a circular import and makes deriveProjectorMessage trivially testable.
  */
 export interface ProjectorMessageState {
-  demos: { id: string; name: string }[];
+  demos: { id: string; name: string; subject?: string; logoUrl?: string }[];
   measuringDemoId: string | null;
   measurePhase: 'idle' | 'calibrating' | 'countdown' | 'measuring' | 'window-end';
   windowSeconds: number;
@@ -159,7 +159,13 @@ export function deriveProjectorMessage(state: ProjectorMessageState): ProjectorM
         // within the same browser plus a local timer give perfect sync.
         return { phase: 'countdown', demoName, countdownSeconds: 3 };
       case 'measuring':
-        return { phase: 'measuring', demoName, remainingSeconds: state.windowSeconds };
+        return {
+          phase: 'measuring',
+          demoName,
+          remainingSeconds: state.windowSeconds,
+          ...(demo?.subject  ? { demoSubject:  demo.subject  } : {}),
+          ...(demo?.logoUrl  ? { demoLogoUrl:  demo.logoUrl  } : {}),
+        };
       case 'window-end':
         return { phase: 'window-end', demoName };
       case 'idle':

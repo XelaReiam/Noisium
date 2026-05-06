@@ -246,6 +246,50 @@ describe('deriveProjectorMessage', () => {
     });
   });
 
+  it('returns measuring payload WITH demoSubject and demoLogoUrl when demo has metadata', () => {
+    const state: ProjectorMessageState = {
+      ...baseState,
+      demos: [{ id: 'a', name: 'Alpha', subject: 'My App', logoUrl: 'data:image/png;base64,abc' }],
+      measuringDemoId: 'a',
+      measurePhase: 'measuring',
+      windowSeconds: 10,
+    };
+    expect(deriveProjectorMessage(state)).toEqual({
+      phase: 'measuring',
+      demoName: 'Alpha',
+      remainingSeconds: 10,
+      demoSubject: 'My App',
+      demoLogoUrl: 'data:image/png;base64,abc',
+    });
+  });
+
+  it('returns measuring payload WITHOUT demoSubject/demoLogoUrl keys when demo has no metadata', () => {
+    const state: ProjectorMessageState = {
+      ...baseState,
+      demos: [{ id: 'a', name: 'Alpha' }],
+      measuringDemoId: 'a',
+      measurePhase: 'measuring',
+      windowSeconds: 10,
+    };
+    const result = deriveProjectorMessage(state);
+    expect(result).toEqual({ phase: 'measuring', demoName: 'Alpha', remainingSeconds: 10 });
+    expect(result).not.toHaveProperty('demoSubject');
+    expect(result).not.toHaveProperty('demoLogoUrl');
+  });
+
+  it('omits demoSubject when subject is empty string (falsy)', () => {
+    const state: ProjectorMessageState = {
+      ...baseState,
+      demos: [{ id: 'a', name: 'Alpha', subject: '' }],
+      measuringDemoId: 'a',
+      measurePhase: 'measuring',
+      windowSeconds: 10,
+    };
+    const result = deriveProjectorMessage(state);
+    expect(result).toEqual({ phase: 'measuring', demoName: 'Alpha', remainingSeconds: 10 });
+    expect(result).not.toHaveProperty('demoSubject');
+  });
+
   it('returns idle when measuringDemoId set but measurePhase=idle', () => {
     const state: ProjectorMessageState = {
       ...baseState,
@@ -287,6 +331,7 @@ describe('privacy invariant: no scores ever in ProjectorMessage', () => {
     { phase: 'calibrating' },
     { phase: 'countdown', demoName: 'Alpha', countdownSeconds: 3 },
     { phase: 'measuring', demoName: 'Alpha', remainingSeconds: 8 },
+    { phase: 'measuring', demoName: 'Alpha', remainingSeconds: 8, demoSubject: 'My App', demoLogoUrl: 'data:image/png;base64,abc' },
     { phase: 'window-end', demoName: 'Alpha' },
     { phase: 'reveal-buildup' },
     { phase: 'reveal', winner: { name: 'Alpha' } },
