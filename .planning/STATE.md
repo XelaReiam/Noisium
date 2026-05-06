@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: MVP
-status: planning
-stopped_at: Completed 09-companion-cli-server/09-01-PLAN.md
-last_updated: "2026-05-06T21:01:22.418Z"
-last_activity: 2026-05-06 — Phase 8 complete (8/8 requirements, 319 tests passing)
+status: complete
+stopped_at: Completed 09-companion-cli-server/09-02-PLAN.md
+last_updated: "2026-05-07T00:00:00.000Z"
+last_activity: 2026-05-07 — Phase 9 complete (CLI server + WS relay, end-to-end LAN confirmed via Firefox profiler)
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 50
 ---
 
@@ -25,14 +25,14 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Position
 
-Milestone: v1.2 Local Network Projector Mode — PHASE 8 COMPLETE
-Phase: 9 — Companion CLI Server (not started)
-Status: Phase 8 verified (8/8 requirements). Ready to plan Phase 9.
-Last activity: 2026-05-06 — Phase 8 complete (8/8 requirements, 319 tests passing)
+Milestone: v1.2 Local Network Projector Mode — COMPLETE
+Phase: 9 — Companion CLI Server (complete)
+Status: All 2 phases verified. End-to-end LAN mode confirmed on real devices.
+Last activity: 2026-05-07 — Phase 9 complete, end-to-end LAN verified
 
-Progress: [█████_____] 50% (1 of 2 phases complete)
+Progress: [██████████] 100% (2 of 2 phases complete)
 
-Next step: `/gsd:plan-phase 9`
+Next step: `/gsd:complete-milestone v1.2` or `/gsd:audit-milestone`
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Next step: `/gsd:plan-phase 9`
 | Phase 08-transport-abstraction-host-connection-ux P02 | ~8min | 2 tasks | 5 files |
 | Phase 08-transport-abstraction-host-connection-ux P03 | ~8min | 2 tasks | 4 files |
 | Phase 09-companion-cli-server P09-01 | 8 | 2 tasks | 10 files |
+| Phase 09-companion-cli-server P02 | 8 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Recent decisions affecting current work:
 - [Phase 09-companion-cli-server]: WebSocketServer created with { server: httpServer } and NO { path } option — matches WebSocketTransport connecting to bare ws://host
 - [Phase 09-companion-cli-server]: SPA fallback uses extname(urlPath) !== '' guard to distinguish SPA routes from missing asset files
 - [Phase 09-companion-cli-server]: getLanIp VIRTUAL_IFACE regex filters VPN interface names before RFC 1918 ordered preference
+- [Phase 09-companion-cli-server]: build:lan overrides base at CLI level (--base=/) rather than changing vite.config — preserves GitHub Pages build
+- [Phase 09-companion-cli-server]: wss.on('error', reject) added to server.js so EADDRINUSE rejects the Promise before reaching index.js .catch()
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-06T21:01:22.415Z
-Stopped at: Completed 09-companion-cli-server/09-01-PLAN.md
+Last session: 2026-05-06T21:05:57.567Z
+Stopped at: Completed 09-companion-cli-server/09-02-PLAN.md
 Resume file: None

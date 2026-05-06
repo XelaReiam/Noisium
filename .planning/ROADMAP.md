@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-05-06)
 - ✅ **v1.1 Metadata + Export** — Phases 6–7 (shipped 2026-05-06)
-- [ ] **v1.2 Local Network Projector Mode** — Phases 8–9 (in planning)
+- [x] **v1.2 Local Network Projector Mode** — Phases 8–9 (shipped 2026-05-07)
 
 ## Phases
 
@@ -35,10 +35,10 @@ Full archive: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 </details>
 
 <details>
-<summary>v1.2 Local Network Projector Mode (Phases 8–9) — IN PLANNING</summary>
+<summary>✅ v1.2 Local Network Projector Mode (Phases 8–9) — SHIPPED 2026-05-07</summary>
 
 - [x] **Phase 8: Transport Abstraction + Host Connection UX** - Pluggable transport interface, Local Network Mode toggle, LAN URL display, and connection status indicators (completed 2026-05-06)
-- [ ] **Phase 9: Companion CLI Server** - `npx noisium` starts a local HTTP + WebSocket relay server with LAN IP detection and zero-config startup
+- [x] **Phase 9: Companion CLI Server** - `npx noisium` starts a local HTTP + WebSocket relay server with LAN IP detection and zero-config startup (completed 2026-05-06)
 
 </details>
 
@@ -156,4 +156,4 @@ Plans:
 | 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 7. Export + Confetti | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 8. Transport Abstraction + Host Connection UX | v1.2 | 3/3 | Complete | 2026-05-06 |
-| 9. Companion CLI Server | 1/2 | In Progress|  | - |
+| 9. Companion CLI Server | v1.2 | 2/2 | Complete | 2026-05-07 |
