@@ -29,17 +29,17 @@ export function ConfettiCanvas({ active }: Props) {
     canvas.height = canvas.offsetHeight || window.innerHeight;
 
     const COLORS = ['#f43f5e', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7'];
-    const PARTICLE_COUNT = 120;
+    const PARTICLE_COUNT = 300;
 
     const particles: Particle[] = Array.from({ length: PARTICLE_COUNT }, () => ({
       x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height * 0.2,
-      vx: (Math.random() - 0.5) * 4,
-      vy: Math.random() * 3 + 2,
+      y: Math.random() * -canvas.height * 1.5, // stagger start so rain lasts longer
+      vx: (Math.random() - 0.5) * 5,
+      vy: Math.random() * 2 + 1, // slower initial fall → longer rain
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      size: Math.random() * 6 + 4,
+      size: Math.random() * 10 + 7, // bigger pieces
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.2,
+      rotationSpeed: (Math.random() - 0.5) * 0.15,
     }));
 
     let rafId: number;
@@ -47,7 +47,7 @@ export function ConfettiCanvas({ active }: Props) {
     function frame() {
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       for (const p of particles) {
-        p.vy += 0.12; // gravity
+        p.vy += 0.06; // softer gravity → floatier, longer hang time
         p.x += p.vx;
         p.y += p.vy;
         p.rotation += p.rotationSpeed;
