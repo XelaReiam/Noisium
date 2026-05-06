@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: MVP
 status: Roadmap created. Phase 6 (Per-Demo Metadata) and Phase 7 (Export + Confetti) defined. No plans written yet.
 stopped_at: Completed 06-per-demo-metadata/06-02-PLAN.md
-last_updated: "2026-05-06T15:48:39.073Z"
+last_updated: "2026-05-06T15:50:54.385Z"
 last_activity: 2026-05-06 — v1.1 roadmap created
 progress:
   total_phases: 2
