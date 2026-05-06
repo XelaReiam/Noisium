@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { getNoisiumChannel } from '../lib/broadcastChannel';
+import { getTransport, resetNoisiumTransport, type TransportMode } from '../lib/transport';
+import { useAppStore } from '../store/useAppStore';
 import type { ProjectorMessage } from '../lib/projector';
 import { ProjectorIdle } from './ProjectorIdle';
 import { ProjectorCountdown } from './ProjectorCountdown';
@@ -13,17 +14,25 @@ const WINDOW_END_DISPLAY_MS = 1200;
 type RevealDisplayPhase = 'buildup' | 'name';
 
 /**
- * Reachable at #/projector. Subscribes to the noisium BroadcastChannel,
- * renders the right screen for each ProjectorMessage variant, and owns
- * the local timers for the reveal buildup→name transition and the
- * window-end auto-fade to idle.
+ * Reachable at #/projector. Subscribes to the noisium transport (broadcast or
+ * WebSocket depending on lanModeEnabled), renders the right screen for each
+ * ProjectorMessage variant, and owns the local timers for the reveal
+ * buildup→name transition and the window-end auto-fade to idle.
  *
- * IMPORTANT: This component does NOT import the host Zustand store. The projector
- * tab has no store of its own — its only state source is the channel.
+ * TRANS-02: When lanModeEnabled=false (broadcast mode), behaviour is identical
+ * to v1.1 — BroadcastChannel messages flow through unmodified.
  *
- * StrictMode safety: the channel is a module-level singleton (Plan 04-01),
- * so double-mounted effects share one channel and only doubled effect calls
- * (e.g. two `request-state` posts) which the host re-broadcasts identically.
+ * CONN-04: When lanModeEnabled=true (websocket mode), reconnects automatically
+ * with exponential backoff: 1s, 2s, 4s, ... capped at 30s. Delay resets to
+ * 1s after a successful open.
+ *
+ * StrictMode safety: getTransport() is a module-level singleton, so double-
+ * mounted effects share one transport instance and only duplicate effect calls
+ * (e.g. two `request-state` posts) which the host handles idempotently.
+ *
+ * NOTE: ProjectorView reads lanModeEnabled from useAppStore. lanModeEnabled is
+ * persisted to localStorage so the projector tab (opened via window.open) shares
+ * the same preference as the host tab.
  *
  * PROJ-04: posts `request-state` on mount so a freshly-opened projector
  * snaps to the host's current phase on the next host action (heartbeat or
@@ -36,12 +45,20 @@ export function ProjectorView() {
   // After WINDOW_END_DISPLAY_MS, auto-transitions to plain idle.
   const [showWindowEnd, setShowWindowEnd] = useState<{ demoName: string } | null>(null);
 
+  // WS reconnect state
+  const [retryCount, setRetryCount] = useState(0);
+  const retryDelayRef = useRef(1000);
+  const retryTimerRef = useRef<number | null>(null);
+
   // Refs for cancellable timers
   const revealTimerRef = useRef<number | null>(null);
   const windowEndTimerRef = useRef<number | null>(null);
 
+  const lanModeEnabled = useAppStore((s) => s.lanModeEnabled);
+  const mode: TransportMode = lanModeEnabled ? 'websocket' : 'broadcast';
+
   useEffect(() => {
-    const channel = getNoisiumChannel();
+    const transport = getTransport(mode);
 
     function clearRevealTimer(): void {
       if (revealTimerRef.current !== null) {
@@ -102,23 +119,54 @@ export function ProjectorView() {
       setMessage(msg);
     }
 
-    channel.addEventListener('message', handleMessage);
+    transport.addEventListener('message', handleMessage);
 
     // PROJ-04: request the current state from the host on mount.
-    channel.postMessage({ phase: 'request-state' });
+    transport.postMessage({ phase: 'request-state' });
 
     // Heartbeat sender — fires every 2s while mounted.
     const heartbeatId = window.setInterval(() => {
-      channel.postMessage({ phase: 'heartbeat-projector' });
+      transport.postMessage({ phase: 'heartbeat-projector' });
     }, HEARTBEAT_INTERVAL_MS);
 
+    // WS-mode reconnect with exponential backoff (CONN-04).
+    // Only attach lifecycle listeners in websocket mode.
+    if (mode === 'websocket') {
+      // Access the underlying WebSocket via the transport to attach open/close.
+      // WebSocketTransport does not expose onStatusChange, so we cast.
+      const wsTransport = transport as unknown as {
+        _ws: WebSocket;
+      };
+
+      function scheduleReconnect(): void {
+        retryTimerRef.current = window.setTimeout(() => {
+          retryDelayRef.current = Math.min(retryDelayRef.current * 2, 30_000);
+          resetNoisiumTransport();
+          setRetryCount((n) => n + 1);
+        }, retryDelayRef.current);
+      }
+
+      wsTransport._ws.onopen = () => {
+        retryDelayRef.current = 1000;
+      };
+
+      wsTransport._ws.onclose = () => {
+        scheduleReconnect();
+      };
+    }
+
     return () => {
-      channel.removeEventListener('message', handleMessage);
+      transport.removeEventListener('message', handleMessage);
       clearInterval(heartbeatId);
       clearRevealTimer();
       clearWindowEndTimer();
+      if (retryTimerRef.current !== null) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+      // Do NOT call transport.close() — the factory owns the lifecycle.
     };
-  }, []);
+  }, [mode, retryCount]);
 
   // Render switch — drives off message.phase, with the windowEnd overlay
   // taking precedence over plain idle.
