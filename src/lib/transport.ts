@@ -113,19 +113,38 @@ let _transport: NoisiumTransport | null = null;
 let _currentMode: TransportMode | null = null;
 
 /**
+ * True when the app is served by the CLI server over plain HTTP from a
+ * non-localhost address (i.e. a real LAN IP). In this case the projector
+ * tab on a remote machine has no lanModeEnabled preference in its
+ * localStorage yet, so we auto-select WebSocket transport regardless of
+ * the stored preference.
+ */
+function isCliServed(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.isSecureContext) return false;
+  const { hostname } = window.location;
+  return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '[::1]';
+}
+
+/**
  * Returns the current transport singleton for the given mode.
  * If the mode differs from the current one, the existing transport is closed
  * and a fresh instance is created.
+ *
+ * When served by the CLI over a LAN IP (plain HTTP, non-localhost), WebSocket
+ * is always used regardless of the passed mode — the remote projector tab has
+ * no stored lanModeEnabled preference.
  */
 export function getTransport(mode: TransportMode): NoisiumTransport {
-  if (_transport !== null && _currentMode === mode) {
+  const effectiveMode: TransportMode = isCliServed() ? 'websocket' : mode;
+  if (_transport !== null && _currentMode === effectiveMode) {
     return _transport;
   }
   _transport?.close();
-  _transport = mode === 'broadcast'
+  _transport = effectiveMode === 'broadcast'
     ? new BroadcastChannelTransport()
     : new WebSocketTransport();
-  _currentMode = mode;
+  _currentMode = effectiveMode;
   return _transport;
 }
 
