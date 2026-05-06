@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { useAppStore } from '../store/useAppStore';
 import { useAudioEngine } from '../hooks/useAudioEngine';
+import { getNoisiumChannel } from '../lib/broadcastChannel';
 
 type CalibrateState =
   | { phase: 'idle' }
@@ -81,6 +82,12 @@ export function CalibrateButton() {
   async function handleClick(): Promise<void> {
     if (disabled || !engineRef.current) return;
 
+    // Broadcast calibration start to projector. The projector renders the
+    // wordmark + "Setting up…" corner status. Direct post (not via the store
+    // → BroadcastBridge derivation path) because calibration is a UI-owned
+    // atomic flow.
+    getNoisiumChannel().postMessage({ phase: 'calibrating' });
+
     // 1. Inline 3-2-1 countdown (1 second per digit)
     setState({ phase: 'countdown', value: 3 });
     timeoutsRef.current.push(
@@ -101,13 +108,19 @@ export function CalibrateButton() {
         const { ambientDbFs } = await engineRef.current.calibrate();
         setCalibrationAmbient(ambientDbFs);
         setState({ phase: 'done' });
-        // Brief inline confirmation, then return to idle
+        // Brief inline confirmation, then return to idle on host AND projector
         timeoutsRef.current.push(
-          window.setTimeout(() => setState({ phase: 'idle' }), CONFIRMATION_DURATION_MS),
+          window.setTimeout(() => {
+            setState({ phase: 'idle' });
+            getNoisiumChannel().postMessage({ phase: 'idle' });
+          }, CONFIRMATION_DURATION_MS),
         );
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Calibration failed.';
         setState({ phase: 'error', message });
+        // Calibration failed — return projector to idle (no audience-visible
+        // hint that something went wrong; host sees the error in the inline UI).
+        getNoisiumChannel().postMessage({ phase: 'idle' });
         timeoutsRef.current.push(
           window.setTimeout(() => setState({ phase: 'idle' }), 2500),
         );
