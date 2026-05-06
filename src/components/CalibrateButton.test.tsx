@@ -61,7 +61,7 @@ describe('CalibrateButton — store-driven broadcast (Phase 5)', () => {
   });
 
   it('(b) sets measurePhase to "idle" after successful calibration + CONFIRMATION_DURATION_MS', async () => {
-    mockCalibrateEngine.mockResolvedValue({ ambientDbFs: -50 });
+    mockCalibrateEngine.mockResolvedValue({ ambientDbFs: -50, stableBaseline: true });
 
     render(<CalibrateButton />);
 

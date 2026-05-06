@@ -27,7 +27,7 @@ The host can skip a demo (no-show) or redo a measurement (bad capture) at any po
 
 **Average dB over a fixed window, not peak.** A single loud whoop at second 1 shouldn't win. The fixed window with average dB smooths out individual outliers and keeps pacing consistent across demos.
 
-**AGC disabled and verified.** Automatic Gain Control (AGC) would compress loud applause toward a flat line, making every demo sound equally loud. The app disables AGC, echo cancellation, and noise suppression via `getUserMedia` constraints, then verifies they're actually off via `track.getSettings()` after stream creation.
+**AGC disabled and checked.** Automatic Gain Control (AGC) would compress loud applause toward a flat line, making every demo sound equally loud. The app requests AGC, echo cancellation, and noise suppression off via `getUserMedia` constraints, then checks the browser-reported settings via `track.getSettings()` and warns if they disagree. Note: the browser reports what it believes is set — OS-level drivers, Bluetooth headsets, and venue DSP hardware can still apply processing regardless.
 
 **AudioContext on user gesture.** Browsers require microphone access to be initiated by a user click (not on page load). The "Enable microphone" button creates the AudioContext inside the click handler, ensuring `audioContext.state === 'running'` before any measurement starts.
 

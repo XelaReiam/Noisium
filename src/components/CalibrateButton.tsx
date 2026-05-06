@@ -7,7 +7,7 @@ type CalibrateState =
   | { phase: 'idle' }
   | { phase: 'countdown'; value: 3 | 2 | 1 }
   | { phase: 'capturing' }
-  | { phase: 'done' }
+  | { phase: 'done'; stable: boolean }
   | { phase: 'error'; message: string };
 
 const CONFIRMATION_DURATION_MS = 1500;
@@ -95,9 +95,9 @@ export function CalibrateButton() {
           setState({ phase: 'error', message: 'Audio engine not ready.' });
           return;
         }
-        const { ambientDbFs } = await engineRef.current.calibrate();
+        const { ambientDbFs, stableBaseline } = await engineRef.current.calibrate();
         setCalibrationAmbient(ambientDbFs);
-        setState({ phase: 'done' });
+        setState({ phase: 'done', stable: stableBaseline });
         // Brief inline confirmation, then return to idle; store write triggers
         // BroadcastBridge to broadcast { phase: 'idle' } to the projector.
         timeoutsRef.current.push(
@@ -148,6 +148,9 @@ export function CalibrateButton() {
       )}
       {state.phase === 'capturing' && (
         <span className="text-sm text-gray-600">Calibrating room — keep quiet</span>
+      )}
+      {state.phase === 'done' && !state.stable && (
+        <span className="text-sm text-amber-700">Room was noisy — recalibrate when quieter</span>
       )}
       {state.phase === 'error' && (
         <span className="text-sm text-red-700">{state.message}</span>

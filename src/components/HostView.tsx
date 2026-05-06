@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { CrossDayCheckEffect } from './CrossDayCheckEffect';
 import { CrossDayModal } from './CrossDayModal';
 import { MicPanel } from './MicPanel';
@@ -22,6 +23,10 @@ export function HostView() {
   const revealActive = useAppStore((s) => s.revealActive);
   const triggerReveal = useAppStore((s) => s.triggerReveal);
   const resetReveal = useAppStore((s) => s.resetReveal);
+  const clearSession = useAppStore((s) => s.clearSession);
+
+  const [newEventConfirming, setNewEventConfirming] = useState(false);
+  const hasSessionData = demos.length > 0 || Object.keys(scores).length > 0;
 
   // The DemoListEditor's "Measure" buttons call back here. We just delegate
   // to the store; the MeasurementOrchestrator picks up the measuringDemoId
@@ -100,7 +105,40 @@ export function HostView() {
           )}
         </div>
 
-        {/* Phase 4: Reset / New event — visible only post-reveal */}
+        {/* New event — available any time there's session data, with confirmation */}
+        {hasSessionData && !revealActive && (
+          <div className="flex items-center gap-3">
+            {newEventConfirming ? (
+              <>
+                <span className="text-sm text-gray-700">Clear all demos and scores?</span>
+                <button
+                  type="button"
+                  onClick={() => { clearSession(); setNewEventConfirming(false); }}
+                  className="px-3 py-1.5 rounded bg-red-600 text-white text-sm font-medium hover:bg-red-700"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewEventConfirming(false)}
+                  className="px-3 py-1.5 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setNewEventConfirming(true)}
+                className="px-4 py-2 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                New event
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Post-reveal: reset reveal state, keep demo list */}
         {revealActive && (
           <button
             type="button"

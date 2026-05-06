@@ -32,7 +32,7 @@ export type MeasurementAbortReason = 'state-change' | 'device-change' | 'manual'
  * call to its own 'device-change' reason. See RESEARCH Pattern 10.
  */
 export type MeasurementResult =
-  | { aborted: false; avgDbFs: number; durationMs: number }
+  | { aborted: false; avgDbFs: number; avgRms: number; rmsStdDev: number; durationMs: number }
   | { aborted: true; reason: MeasurementAbortReason };
 
 type StatusCallback = (status: EngineStatus) => void;
@@ -279,10 +279,15 @@ export class AudioEngine {
             samples.length > 0
               ? samples.reduce((a, b) => a + b, 0) / samples.length
               : 0;
-          const avg = dbFsFromRms(avgRms);
+          const variance =
+            samples.length > 1
+              ? samples.reduce((sum, s) => sum + (s - avgRms) ** 2, 0) / samples.length
+              : 0;
           finish({
             aborted: false,
-            avgDbFs: avg,
+            avgDbFs: dbFsFromRms(avgRms),
+            avgRms,
+            rmsStdDev: Math.sqrt(variance),
             durationMs: performance.now() - startMs,
           });
         }
@@ -314,12 +319,15 @@ export class AudioEngine {
    * just runs the actual capture window when called. Per CONTEXT decision: the
    * countdown is host-UI timing.
    */
-  async calibrate(signal?: AbortSignal): Promise<{ ambientDbFs: number }> {
+  async calibrate(signal?: AbortSignal): Promise<{ ambientDbFs: number; stableBaseline: boolean }> {
     const result = await this.startMeasurement(3, signal);
     if (result.aborted) {
       throw new Error('Calibration aborted');
     }
-    return { ambientDbFs: result.avgDbFs };
+    // Coefficient of variation > 0.5 means the ambient noise was highly variable
+    // during the capture window — HVAC kick, door slam, host speaking, etc.
+    const cv = result.avgRms > 0 ? result.rmsStdDev / result.avgRms : 0;
+    return { ambientDbFs: result.avgDbFs, stableBaseline: cv < 0.5 };
   }
 
   private _stopStream(): void {
