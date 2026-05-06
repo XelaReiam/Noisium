@@ -79,7 +79,7 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 - [x] 04-04-PLAN.md (Wave 3) — BroadcastBridge render-null component (subscribe-and-derive + dedup + request-state reply + heartbeat) + MeasurementOrchestrator setMeasurePhase wiring + 1.2s window-end hold + CalibrateButton calibrating/idle direct broadcasts
 - [x] 04-05-PLAN.md (Wave 4) — HostView wiring (mount BroadcastBridge, ProjectorToolbar header, Reveal/Reset buttons) + manual verification checkpoint covering all 6 Phase 4 requirements end-to-end on deployed URL with second monitor — APPROVED 2026-05-06
 
-- [ ] **Phase 5: Polish Broadcast Architecture** - Remove extra calibration gate, unify all BroadcastChannel posts through BroadcastBridge
+- [x] **Phase 5: Polish Broadcast Architecture** - Remove extra calibration gate, unify all BroadcastChannel posts through BroadcastBridge (completed 2026-05-06)
 
 ### Phase 5: Polish Broadcast Architecture
 **Goal**: Remove the spurious demo-count gate from CalibrateButton so hosts can pre-calibrate before adding demos, and consolidate all BroadcastChannel messages through BroadcastBridge to eliminate the dual posting paths identified in the v1.0 audit.
@@ -91,7 +91,7 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   2. All BroadcastChannel messages flow through a single path: store state → BroadcastBridge → `deriveProjectorMessage` → channel; no component posts directly to the channel
   3. Projector behaviour is identical to Phase 4: calibrating screen, countdown, suspense, window-end fade, reveal — just routed through the unified path
   4. All existing tests pass; new tests cover the removed gate and the unified message path
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 - [ ] 05-01-PLAN.md — Widen measurePhase type to include 'calibrating', extend deriveProjectorMessage, refactor CalibrateButton + MeasurementOrchestrator to use store writes, update all affected tests
 
 ## Progress
@@ -102,4 +102,4 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 | 2. Audio Pipeline | 5/5 | Complete    | 2026-05-05 |
 | 3. Calibration + Measurement + Show Control | 6/6 | Complete    | 2026-05-05 |
 | 4. Two-Surface Architecture | 5/5 | Complete    | 2026-05-06 |
-| 5. Polish Broadcast Architecture | 0/1 | Pending    |  |
+| 5. Polish Broadcast Architecture | 1/1 | Complete   | 2026-05-06 |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-05-06T08:52:35.164Z"
-last_activity: 2026-05-06 — Phase 4 Plan 5 complete (two-surface host UI + manual E2E verification, all 26 requirements verified, v1.0 milestone complete)
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-05-06T11:29:41.551Z"
+last_activity: 2026-05-06 — Phase 4 Plan 5 complete (two-surface host UI + manual E2E verification, all 26 requirements verified)
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 20
+  completed_plans: 20
   percent: 100
 ---
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 03-calibration-measurement-show-control P06 | ~2h | 3 tasks | 2 files |
 | Phase 04-two-surface-architecture P02 | 5min | 1 tasks | 2 files |
 | Phase 04 P05 | 30min | 4 tasks | 3 files |
+| Phase 05-polish-broadcast-architecture P01 | 4min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Recent decisions affecting current work:
 - [Phase 04]: ProjectorToolbar standalone TDD-tested component keeps HostView clean and allows isolated unit testing
 - [Phase 04]: header strip separate from main so MeasurementOrchestrator absolute overlay covers exactly main, not the header
 - [Phase 04]: BroadcastBridge mounted as render-null sibling before visible UI tree, consistent with CrossDayCheckEffect pattern
+- [Phase 05-polish-broadcast-architecture]: All BroadcastChannel posts now flow through BroadcastBridge via store writes; calibrating added to measurePhase union; CalibrateButton enabled on micPermission alone (TD-2 + TD-3 closed)
 
 ### Pending Todos
 
@@ -135,6 +137,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-06T08:52:19.751Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-05-06T11:29:41.548Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
