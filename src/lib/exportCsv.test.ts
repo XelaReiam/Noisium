@@ -138,6 +138,18 @@ describe('buildCsvString — two demos, different scores', () => {
     expect(bravoRow[3]).toBe('1');       // rank
     expect(bravoRow[5]).toBe('true');    // winner
   });
+
+  it('marks only the winning row when duplicate demo names have different scores', () => {
+    const duplicateDemos: Demo[] = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Alpha' },
+    ];
+    const csv = buildCsvString(duplicateDemos, { a: score(8), b: score(12) }, []);
+    const dataRows = rows(csv).slice(1).map(parseRow);
+
+    expect(dataRows[0][5]).toBe('false');
+    expect(dataRows[1][5]).toBe('true');
+  });
 });
 
 describe('buildCsvString — tied demos', () => {

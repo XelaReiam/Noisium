@@ -86,6 +86,32 @@ describe('CalibrateButton — store-driven broadcast (Phase 5)', () => {
     expect(useAppStore.getState().measurePhase).toBe('idle');
   });
 
+  it('does not reset measurePhase if a measurement starts during the confirmation window', async () => {
+    mockCalibrateEngine.mockResolvedValue({ ambientDbFs: -50, stableBaseline: true });
+
+    render(<CalibrateButton />);
+
+    act(() => {
+      clickCalibrateButton();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(3000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      useAppStore.getState().setMeasurePhase('countdown');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    expect(useAppStore.getState().measurePhase).toBe('countdown');
+  });
+
   it('(c) sets measurePhase to "idle" immediately on calibration error', async () => {
     mockCalibrateEngine.mockRejectedValue(new Error('Mic lost'));
 

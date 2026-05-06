@@ -12,7 +12,6 @@
 
 import type { Demo, Score } from '../store/useAppStore';
 import { getDemoStatus } from './measurement';
-import { deriveWinner } from './projector';
 
 // ============================================================================
 // Types
@@ -51,17 +50,7 @@ export function buildCsvRows(
   scores: Readonly<Record<string, Score>>,
   skippedDemoIds: readonly string[],
 ): CsvRow[] {
-  // 1. Derive winner set (by name, as deriveWinner returns names)
-  const winnerResult = deriveWinner(demos, scores, skippedDemoIds);
-  const winnerNames = new Set<string>(
-    winnerResult === null
-      ? []
-      : 'names' in winnerResult
-        ? winnerResult.names
-        : [winnerResult.name],
-  );
-
-  // 2. Get status for each demo (no active measurement at export time)
+  // 1. Get status for each demo (no active measurement at export time)
   type DemoWithStatus = { demo: Demo; status: string; deltaDb: number | null };
   const withStatus: DemoWithStatus[] = demos.map((demo) => {
     const rawStatus = getDemoStatus(demo.id, null, null, scores as Record<string, Score>, skippedDemoIds);
@@ -75,13 +64,13 @@ export function buildCsvRows(
     return { demo, status, deltaDb };
   });
 
-  // 3. Collect and sort measured demos for rank assignment
+  // 2. Collect and sort measured demos for rank assignment
   const measured = withStatus
     .filter((d) => d.status === 'measured' && d.deltaDb !== null)
     .slice()
     .sort((a, b) => (b.deltaDb as number) - (a.deltaDb as number));
 
-  // 4. Assign competition ranks (1, 1, 3 for ties)
+  // 3. Assign competition ranks (1, 1, 3 for ties)
   const rankMap = new Map<string, number>();
   let prevDelta: number | null = null;
   let prevRank = 0;
@@ -93,14 +82,14 @@ export function buildCsvRows(
     prevRank = rank;
   });
 
-  // 5. Build CSV rows preserving original demo order
+  // 4. Build CSV rows preserving original demo order
   return withStatus.map(({ demo, status, deltaDb }) => ({
     name: demo.name,
     subject: demo.subject ?? '',
     deltaDb: deltaDb !== null ? deltaDb.toFixed(2) : '',
     rank: rankMap.has(demo.id) ? String(rankMap.get(demo.id)) : '',
     status,
-    winner: winnerNames.has(demo.name) ? 'true' : 'false',
+    winner: rankMap.get(demo.id) === 1 ? 'true' : 'false',
   }));
 }
 

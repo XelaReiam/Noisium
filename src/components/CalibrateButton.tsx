@@ -103,7 +103,9 @@ export function CalibrateButton() {
         timeoutsRef.current.push(
           window.setTimeout(() => {
             setState({ phase: 'idle' });
-            setMeasurePhase('idle');
+            if (useAppStore.getState().measurePhase === 'calibrating') {
+              setMeasurePhase('idle');
+            }
           }, CONFIRMATION_DURATION_MS),
         );
       } catch (err) {

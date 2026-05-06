@@ -395,7 +395,6 @@ describe('AudioEngine.startMeasurement (MEAS-02 / MEAS-04)', () => {
         connect: vi.fn(),
       }));
       constructor() {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         fakeCtxInstance = this;
       }
     }

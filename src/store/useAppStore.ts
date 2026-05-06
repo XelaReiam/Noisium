@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { MicPermission } from '../lib/audioEngine';
 import { computeDelta, type Score } from '../lib/measurement';
 import { deriveWinner } from '../lib/projector';
+import { todayLocalISO } from '../lib/date';
 
 export type { MicPermission };
 export type WindowSeconds = 5 | 8 | 10;
@@ -100,10 +101,6 @@ export interface AppState {
   refreshProjectorHeartbeat: () => void;
 }
 
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
-}
-
 // Module-level: holds the pending heartbeat-staleness timer so we can clear it
 // from inside refreshProjectorHeartbeat without storing the ID in Zustand
 // (storing setTimeout IDs in store state is unusual and harder to reason about).
@@ -128,7 +125,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       // -- Persisted defaults ----
       windowSeconds: 8,
-      sessionDate: todayISO(),
+      sessionDate: todayLocalISO(),
 
       // Phase 3 persisted defaults
       demos: [],
@@ -336,7 +333,7 @@ export const useAppStore = create<AppState>()(
         set({
           // Phase 1
           windowSeconds: 8,
-          sessionDate: todayISO(),
+          sessionDate: todayLocalISO(),
           // Phase 2
           micPermission: 'idle',
           micDeviceId: null,

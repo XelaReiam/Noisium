@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
-}
+import { todayLocalISO } from '../lib/date';
 
 export function CrossDayModal() {
   const crossDayPromptShown = useAppStore((s) => s.crossDayPromptShown);
@@ -34,7 +31,7 @@ export function CrossDayModal() {
   }
 
   function handleRestore() {
-    setSessionDate(todayISO());
+    setSessionDate(todayLocalISO());
     setCrossDayPromptShown(false);
   }
 

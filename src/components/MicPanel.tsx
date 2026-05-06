@@ -101,7 +101,6 @@ export function MicPanel() {
       // @ts-expect-error — cleanup of the bridge
       delete window.__noisiumDisposeEngine;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Render switch

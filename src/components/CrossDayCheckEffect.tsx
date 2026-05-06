@@ -1,9 +1,6 @@
 import { useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
-
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
-}
+import { todayLocalISO } from '../lib/date';
 
 export function CrossDayCheckEffect() {
   const sessionDate = useAppStore((s) => s.sessionDate);
@@ -14,7 +11,7 @@ export function CrossDayCheckEffect() {
     // Already showing or already dismissed this load — do nothing.
     if (crossDayPromptShown) return;
     if (!sessionDate) return; // first-ever load (no persisted date) — no prompt
-    const today = todayISO();
+    const today = todayLocalISO();
     if (sessionDate !== today) {
       setCrossDayPromptShown(true);
     }
