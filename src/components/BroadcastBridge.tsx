@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { getNoisiumChannel } from '../lib/broadcastChannel';
+import { getTransport, type TransportMode } from '../lib/transport';
 import {
   deriveProjectorMessage,
   type ProjectorMessageState,
@@ -9,7 +9,7 @@ import {
 const HEARTBEAT_INTERVAL_MS = 2000;
 
 /**
- * Render-null host-side BroadcastChannel relay. Mounted once in HostView
+ * Render-null host-side transport relay. Mounted once in HostView
  * alongside CrossDayCheckEffect and MeasurementOrchestrator.
  *
  * Three responsibilities:
@@ -26,17 +26,34 @@ const HEARTBEAT_INTERVAL_MS = 2000;
  *      which sets projectorConnected=true and schedules the 5s staleness timer
  *
  * 3. POST `{ phase: 'heartbeat-host' }` every 2s so the projector's optional
- *    "host alive" awareness can work (we don't currently render anything off
- *    this on the projector, but the message is part of the locked union).
+ *    "host alive" awareness can work.
  *
- * Pattern matches CrossDayCheckEffect: render-null component, all logic in
- * a single useEffect with a clean cleanup path.
+ * Transport selection:
+ *    - lanModeEnabled=false → BroadcastChannelTransport (same-device mode)
+ *    - lanModeEnabled=true  → WebSocketTransport (LAN mode via CLI relay)
+ *
+ * When WS mode is active, wsConnectionStatus is driven from WS lifecycle:
+ *    - On effect entry (WS transport created): 'waiting'
+ *    - On WS onopen: 'connected'
+ *    - On WS onclose: 'disconnected'
+ *
+ * CRITICAL: transport.close() is NOT called in cleanup — the factory owns
+ * the singleton lifecycle. Cleanup only removes listeners and clears timers.
  */
 export function BroadcastBridge() {
   const lastSentRef = useRef<string>('');
 
+  const lanModeEnabled = useAppStore((s) => s.lanModeEnabled);
+  const setWsConnectionStatus = useAppStore((s) => s.setWsConnectionStatus);
+
+  // Derive the current mode string — used as a dependency so the effect
+  // re-runs when the user toggles LAN mode (TRANS-04 requirement).
+  const mode: TransportMode = lanModeEnabled ? 'websocket' : 'broadcast';
+
   useEffect(() => {
-    const channel = getNoisiumChannel();
+    // Capture transport in a local const (pitfall 2: cleanup must reference
+    // this exact instance, not call getTransport() again).
+    const transport = getTransport(mode);
 
     function pickProjectorState(): ProjectorMessageState {
       const s = useAppStore.getState();
@@ -55,12 +72,29 @@ export function BroadcastBridge() {
       const serialized = JSON.stringify(msg);
       if (!force && serialized === lastSentRef.current) return;
       lastSentRef.current = serialized;
-      channel.postMessage(msg);
+      transport.postMessage(msg);
     }
 
-    // 1. Initial broadcast — gives a freshly-mounted host a baseline send so
-    //    the projector receives at least one message even if no state change
-    //    follows immediately.
+    // --- WS lifecycle hooks (only in websocket mode) ---
+    if (mode === 'websocket') {
+      setWsConnectionStatus('waiting');
+      // Access the underlying WebSocket instance to attach lifecycle hooks.
+      // We use the internal _ws field (as any) since WebSocketTransport does
+      // not expose an onStatusChange callback. This is the accepted approach
+      // per plan research open question 2 when onStatusChange isn't implemented.
+      const wsTransport = transport as unknown as { _ws?: WebSocket };
+      if (wsTransport._ws) {
+        const ws = wsTransport._ws;
+        ws.onopen = () => {
+          setWsConnectionStatus('connected');
+        };
+        ws.onclose = () => {
+          setWsConnectionStatus('disconnected');
+        };
+      }
+    }
+
+    // 1. Initial broadcast — gives a freshly-mounted host a baseline send.
     broadcastIfChanged(true);
 
     // 2. Subscribe to ALL store changes — derive + send on each.
@@ -68,7 +102,7 @@ export function BroadcastBridge() {
       broadcastIfChanged();
     });
 
-    // 3. Listen for projector replies on the channel.
+    // 3. Listen for projector replies on the transport.
     function handleIncoming(event: MessageEvent<unknown>): void {
       const data = event.data as { phase?: string };
       if (!data || typeof data.phase !== 'string') return;
@@ -85,21 +119,22 @@ export function BroadcastBridge() {
         return;
       }
 
-      // Anything else — including our own heartbeat-host echo — is ignored.
+      // Anything else is ignored.
     }
-    channel.addEventListener('message', handleIncoming);
+    transport.addEventListener('message', handleIncoming);
 
     // 4. Heartbeat sender.
     const heartbeatId = window.setInterval(() => {
-      channel.postMessage({ phase: 'heartbeat-host' });
+      transport.postMessage({ phase: 'heartbeat-host' });
     }, HEARTBEAT_INTERVAL_MS);
 
     return () => {
       unsub();
-      channel.removeEventListener('message', handleIncoming);
+      transport.removeEventListener('message', handleIncoming);
       clearInterval(heartbeatId);
+      // NOTE: do NOT call transport.close() — factory owns lifecycle.
     };
-  }, []);
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

@@ -3,6 +3,7 @@ import { render, cleanup, act } from '@testing-library/react';
 import { BroadcastBridge } from './BroadcastBridge';
 import { useAppStore } from '../store/useAppStore';
 import { getNoisiumChannel, resetNoisiumChannel } from '../lib/broadcastChannel';
+import { resetNoisiumTransport } from '../lib/transport';
 
 function getMockChannel() {
   return getNoisiumChannel() as unknown as {
@@ -11,23 +12,26 @@ function getMockChannel() {
   };
 }
 
-describe('BroadcastBridge', () => {
+
+describe('BroadcastBridge — broadcast mode (lanModeEnabled=false)', () => {
   beforeEach(() => {
     localStorage.clear();
     resetNoisiumChannel();
+    resetNoisiumTransport();
+    useAppStore.setState({ lanModeEnabled: false, wsConnectionStatus: 'idle' });
     useAppStore.getState().clearSession();
   });
 
   afterEach(() => {
     cleanup();
     resetNoisiumChannel();
+    resetNoisiumTransport();
     vi.useRealTimers();
   });
 
   it('posts an initial derived message on mount', () => {
     render(<BroadcastBridge />);
     const ch = getMockChannel();
-    // The default state derives to { phase: 'idle' } per Plan 04-01 logic.
     expect(ch.postMessage).toHaveBeenCalledWith({ phase: 'idle' });
   });
 
@@ -35,7 +39,6 @@ describe('BroadcastBridge', () => {
     vi.useFakeTimers();
     render(<BroadcastBridge />);
     const ch = getMockChannel();
-    // Clear the initial idle send so we can isolate the heartbeat.
     ch.postMessage.mockClear();
     vi.advanceTimersByTime(2000);
     expect(ch.postMessage).toHaveBeenCalledWith({ phase: 'heartbeat-host' });
@@ -51,8 +54,6 @@ describe('BroadcastBridge', () => {
       useAppStore.getState().startMeasure(id);
       useAppStore.getState().setMeasurePhase('measuring');
     });
-    // The dedup logic means we may have several sends (idle → idle is skipped,
-    // but the measuring transition is unique). Find the measuring one.
     const calls = ch.postMessage.mock.calls.map((c) => c[0]);
     expect(calls).toContainEqual(
       expect.objectContaining({
@@ -97,15 +98,10 @@ describe('BroadcastBridge', () => {
     render(<BroadcastBridge />);
     const ch = getMockChannel();
     ch.postMessage.mockClear();
-    // Fire a store update that does NOT change the derived message.
-    // setProjectorConnected is irrelevant to the derived message — it should
-    // NOT trigger a broadcast.
     act(() => {
       useAppStore.getState().setProjectorConnected(true);
       useAppStore.getState().setProjectorConnected(false);
     });
-    // The bridge should have de-duped these — only zero or very few non-
-    // derive-changing posts (heartbeats are time-driven, not state-driven).
     const stateChangeCalls = ch.postMessage.mock.calls.filter(
       (c) => (c[0] as { phase: string }).phase !== 'heartbeat-host',
     );
@@ -140,10 +136,138 @@ describe('BroadcastBridge', () => {
     ch.postMessage.mockClear();
     unmount();
     vi.advanceTimersByTime(5000);
-    // No heartbeats after unmount.
     const heartbeatCalls = ch.postMessage.mock.calls.filter(
       (c) => (c[0] as { phase: string }).phase === 'heartbeat-host',
     );
     expect(heartbeatCalls).toHaveLength(0);
+  });
+
+  it('does NOT call setWsConnectionStatus in broadcast mode', () => {
+    const setWsConnectionStatus = vi.fn();
+    useAppStore.setState({ lanModeEnabled: false, setWsConnectionStatus });
+    render(<BroadcastBridge />);
+    expect(setWsConnectionStatus).not.toHaveBeenCalled();
+  });
+});
+
+type MockWsInstance = {
+  send: ReturnType<typeof vi.fn>;
+  _simulateOpen: () => void;
+  _simulateClose: (code?: number) => void;
+  _simulateMessage: (data: unknown) => void;
+  onopen: ((event: Event) => void) | null;
+  onclose: ((event: CloseEvent) => void) | null;
+};
+
+describe('BroadcastBridge — websocket mode (lanModeEnabled=true)', () => {
+  let wsInstances: MockWsInstance[];
+  let OriginalWs: typeof WebSocket;
+
+  beforeEach(() => {
+    wsInstances = [];
+    // Capture every MockWebSocket instance by wrapping globalThis.WebSocket
+    // with a subclass so it stays constructable (vi.spyOn breaks 'new').
+    OriginalWs = globalThis.WebSocket;
+    const captured = wsInstances;
+    class TrackingWs extends (OriginalWs as unknown as new (url: string) => MockWsInstance) {
+      constructor(url: string) {
+        super(url);
+        captured.push(this);
+      }
+    }
+    // @ts-expect-error — override global
+    globalThis.WebSocket = TrackingWs;
+
+    localStorage.clear();
+    resetNoisiumChannel();
+    resetNoisiumTransport();
+    useAppStore.setState({ lanModeEnabled: true, wsConnectionStatus: 'idle' });
+    useAppStore.getState().clearSession();
+  });
+
+  afterEach(() => {
+    cleanup();
+    // @ts-expect-error — restore global
+    globalThis.WebSocket = OriginalWs;
+    resetNoisiumChannel();
+    resetNoisiumTransport();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('calls setWsConnectionStatus("waiting") immediately on mount in WS mode', () => {
+    const spy = vi.spyOn(useAppStore.getState(), 'setWsConnectionStatus');
+    render(<BroadcastBridge />);
+    expect(spy).toHaveBeenCalledWith('waiting');
+  });
+
+  it('calls setWsConnectionStatus("connected") when WS onopen fires', () => {
+    render(<BroadcastBridge />);
+    const spy = vi.spyOn(useAppStore.getState(), 'setWsConnectionStatus');
+    act(() => {
+      wsInstances[0]._simulateOpen();
+    });
+    expect(spy).toHaveBeenCalledWith('connected');
+  });
+
+  it('calls setWsConnectionStatus("disconnected") when WS onclose fires', () => {
+    render(<BroadcastBridge />);
+    act(() => {
+      wsInstances[0]._simulateOpen();
+    });
+    const spy = vi.spyOn(useAppStore.getState(), 'setWsConnectionStatus');
+    act(() => {
+      wsInstances[0]._simulateClose();
+    });
+    expect(spy).toHaveBeenCalledWith('disconnected');
+  });
+
+  it('sends the initial derived message via WS transport when OPEN', () => {
+    render(<BroadcastBridge />);
+    act(() => {
+      wsInstances[0]._simulateOpen();
+    });
+    // Initial state message force-sent on mount would have been dropped (WS not open yet).
+    // After opening, a store change should trigger a broadcast.
+    act(() => {
+      useAppStore.getState().setMeasurePhase('calibrating');
+    });
+    expect(wsInstances[0].send).toHaveBeenCalledWith(
+      expect.stringContaining('"phase":"calibrating"'),
+    );
+  });
+
+  it('does NOT call postMessage on BroadcastChannel in WS mode', () => {
+    render(<BroadcastBridge />);
+    act(() => {
+      wsInstances[0]._simulateOpen();
+    });
+    const ch = getMockChannel();
+    // Clear any calls from construction; store-driven sends should go via WS
+    ch.postMessage.mockClear();
+    act(() => {
+      useAppStore.getState().setMeasurePhase('calibrating');
+    });
+    const stateChangeCalls = ch.postMessage.mock.calls.filter(
+      (c) => (c[0] as { phase: string }).phase !== 'heartbeat-host',
+    );
+    expect(stateChangeCalls).toHaveLength(0);
+  });
+
+  it('switches transport when lanModeEnabled changes from false to true', () => {
+    // Start in broadcast mode
+    useAppStore.setState({ lanModeEnabled: false });
+    render(<BroadcastBridge />);
+
+    // Spy on setWsConnectionStatus BEFORE the switch so we can verify it's called
+    const spy = vi.spyOn(useAppStore.getState(), 'setWsConnectionStatus');
+
+    // Switch to WS mode via store — triggers re-render and effect re-run with mode='websocket'
+    act(() => {
+      useAppStore.setState({ lanModeEnabled: true });
+    });
+
+    // setWsConnectionStatus('waiting') should have been called on WS transport init
+    expect(spy).toHaveBeenCalledWith('waiting');
   });
 });

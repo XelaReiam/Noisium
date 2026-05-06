@@ -9,6 +9,7 @@ import { DemoListEditor } from './DemoListEditor';
 import { MeasurementOrchestrator } from './MeasurementOrchestrator';
 import { BroadcastBridge } from './BroadcastBridge';
 import { ProjectorToolbar } from './ProjectorToolbar';
+import { LanModeToggle } from './LanModeToggle';
 import { DownloadCsvButton } from './DownloadCsvButton';
 import { useAppStore } from '../store/useAppStore';
 import { canRevealWinner } from '../lib/projector';
@@ -46,8 +47,9 @@ export function HostView() {
       {/* Phase 4: render-null host-side broadcast relay */}
       <BroadcastBridge />
 
-      {/* Phase 4: header strip with projector toolbar */}
-      <header className="px-4 py-2 border-b border-gray-100 flex justify-end">
+      {/* Phase 4: header strip with projector toolbar + Phase 8: LAN mode toggle */}
+      <header className="px-4 py-2 border-b border-gray-100 flex items-center justify-end gap-4">
+        <LanModeToggle />
         <ProjectorToolbar />
       </header>
 
