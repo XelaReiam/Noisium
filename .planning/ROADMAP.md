@@ -79,7 +79,11 @@ Plans:
   3. When the projector tab transitions to the winner reveal screen, a confetti animation fires automatically and is visible on the projector display
   4. Confetti appears only on the projector (not the host view) and does not break or obscure the winner name display
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — exportCsv pure-function library + DownloadCsvButton component + HostView wiring (EXPORT-01)
+- [ ] 07-02-PLAN.md — ConfettiCanvas hand-rolled Canvas component + ProjectorReveal wiring (PROJ-05)
 
 ---
 
@@ -92,5 +96,5 @@ Plans:
 | 3. Calibration + Measurement + Show Control | v1.0 | 6/6 | Complete | 2026-05-05 |
 | 4. Two-Surface Architecture | v1.0 | 5/5 | Complete | 2026-05-06 |
 | 5. Polish Broadcast Architecture | v1.0 | 1/1 | Complete | 2026-05-06 |
-| 6. Per-Demo Metadata | 2/2 | Complete   | 2026-05-06 | - |
-| 7. Export + Confetti | v1.1 | 0/? | Not started | - |
+| 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
+| 7. Export + Confetti | v1.1 | 0/2 | Not started | - |
