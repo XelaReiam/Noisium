@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, cleanup, act, screen, fireEvent } from '@testing-library/react';
 import { CalibrateButton } from './CalibrateButton';
 import { useAppStore } from '../store/useAppStore';
-import { getNoisiumChannel, resetNoisiumChannel } from '../lib/broadcastChannel';
 
 // ---------------------------------------------------------------------------
 // Mock useAudioEngine — provide a controllable engine
@@ -17,66 +16,58 @@ vi.mock('../hooks/useAudioEngine', () => ({
   }),
 }));
 
-function getMockChannel() {
-  return getNoisiumChannel() as unknown as {
-    postMessage: ReturnType<typeof vi.fn>;
-    _simulateMessage: (data: unknown) => void;
-  };
-}
-
 function clickCalibrateButton() {
   const btn = screen.getByRole('button');
   fireEvent.click(btn);
 }
 
-describe('CalibrateButton — channel broadcasts (Phase 4)', () => {
+describe('CalibrateButton — store-driven broadcast (Phase 5)', () => {
   beforeEach(() => {
     localStorage.clear();
-    resetNoisiumChannel();
     useAppStore.getState().clearSession();
     vi.useFakeTimers();
 
-    // Set up store so button is enabled
+    // Set up store so button is enabled — no addDemo needed (TD-2 removed)
     act(() => {
       useAppStore.getState().setMicPermission('granted');
-      useAppStore.getState().addDemo('TestDemo');
     });
   });
 
   afterEach(() => {
     cleanup();
-    resetNoisiumChannel();
     vi.useRealTimers();
     vi.clearAllMocks();
     useAppStore.getState().clearSession();
   });
 
-  it('(a) immediately broadcasts { phase: "calibrating" } on click', () => {
-    // Calibrate never resolves during this test (we just check the click broadcast)
+  it('button is enabled with zero demos when micPermission === "granted"', () => {
+    render(<CalibrateButton />);
+    const btn = screen.getByRole('button');
+    // Documents TD-2 removal — zero demos, no addDemo, still enabled
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('(a) immediately sets measurePhase to "calibrating" on click', () => {
+    // Calibrate never resolves during this test (we just check the click store write)
     mockCalibrateEngine.mockReturnValue(new Promise(() => {}));
 
     render(<CalibrateButton />);
-    const ch = getMockChannel();
-    ch.postMessage.mockClear();
 
     act(() => {
       clickCalibrateButton();
     });
 
-    const calls = ch.postMessage.mock.calls.map((c) => c[0]);
-    expect(calls).toContainEqual({ phase: 'calibrating' });
+    expect(useAppStore.getState().measurePhase).toBe('calibrating');
   });
 
-  it('(b) broadcasts { phase: "idle" } after successful calibration + confirmation delay', async () => {
+  it('(b) sets measurePhase to "idle" after successful calibration + CONFIRMATION_DURATION_MS', async () => {
     mockCalibrateEngine.mockResolvedValue({ ambientDbFs: -50 });
 
     render(<CalibrateButton />);
-    const ch = getMockChannel();
 
     act(() => {
       clickCalibrateButton();
     });
-    ch.postMessage.mockClear();
 
     // Advance through 3s countdown + 0ms (engine resolves immediately after capture starts)
     await act(async () => {
@@ -92,20 +83,17 @@ describe('CalibrateButton — channel broadcasts (Phase 4)', () => {
       vi.advanceTimersByTime(1500);
     });
 
-    const calls = ch.postMessage.mock.calls.map((c) => c[0]);
-    expect(calls).toContainEqual({ phase: 'idle' });
+    expect(useAppStore.getState().measurePhase).toBe('idle');
   });
 
-  it('(c) broadcasts { phase: "idle" } immediately on calibration error', async () => {
+  it('(c) sets measurePhase to "idle" immediately on calibration error', async () => {
     mockCalibrateEngine.mockRejectedValue(new Error('Mic lost'));
 
     render(<CalibrateButton />);
-    const ch = getMockChannel();
 
     act(() => {
       clickCalibrateButton();
     });
-    ch.postMessage.mockClear();
 
     // Advance through 3s countdown to start capture phase
     await act(async () => {
@@ -115,9 +103,8 @@ describe('CalibrateButton — channel broadcasts (Phase 4)', () => {
       await Promise.resolve();
     });
 
-    // The idle broadcast should have been sent immediately in the catch block
+    // The idle store write should have been called immediately in the catch block
     // (before any 2500ms timer advance)
-    const calls = ch.postMessage.mock.calls.map((c) => c[0]);
-    expect(calls).toContainEqual({ phase: 'idle' });
+    expect(useAppStore.getState().measurePhase).toBe('idle');
   });
 });

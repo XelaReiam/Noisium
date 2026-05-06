@@ -62,6 +62,17 @@ describe('BroadcastBridge', () => {
     );
   });
 
+  it('broadcasts { phase: "calibrating" } when store setMeasurePhase("calibrating") is called', () => {
+    render(<BroadcastBridge />);
+    const ch = getMockChannel();
+    ch.postMessage.mockClear();
+    act(() => {
+      useAppStore.getState().setMeasurePhase('calibrating');
+    });
+    const calls = ch.postMessage.mock.calls.map((c) => c[0]);
+    expect(calls).toContainEqual({ phase: 'calibrating' });
+  });
+
   it('broadcasts on triggerReveal', () => {
     render(<BroadcastBridge />);
     const ch = getMockChannel();
