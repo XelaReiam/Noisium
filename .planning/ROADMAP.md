@@ -28,7 +28,7 @@ Full archive: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 <details>
 <summary>v1.1 Metadata + Export (Phases 6–7) — IN PLANNING</summary>
 
-- [ ] **Phase 6: Per-Demo Metadata** — Subject field + logo upload per demo; projector suspense screen shows company name, subject, and logo; persisted to localStorage
+- [x] **Phase 6: Per-Demo Metadata** — Subject field + logo upload per demo; projector suspense screen shows company name, subject, and logo; persisted to localStorage (completed 2026-05-06)
 - [ ] **Phase 7: Export + Confetti** — CSV download of session results; confetti animation on winner reveal screen
 
 </details>
@@ -92,5 +92,5 @@ Plans:
 | 3. Calibration + Measurement + Show Control | v1.0 | 6/6 | Complete | 2026-05-05 |
 | 4. Two-Surface Architecture | v1.0 | 5/5 | Complete | 2026-05-06 |
 | 5. Polish Broadcast Architecture | v1.0 | 1/1 | Complete | 2026-05-06 |
-| 6. Per-Demo Metadata | 1/2 | In Progress|  | - |
+| 6. Per-Demo Metadata | 2/2 | Complete   | 2026-05-06 | - |
 | 7. Export + Confetti | v1.1 | 0/? | Not started | - |
