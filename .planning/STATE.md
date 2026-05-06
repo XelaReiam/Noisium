@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: MVP
-status: Roadmap created. Phase 6 (Per-Demo Metadata) and Phase 7 (Export + Confetti) defined. No plans written yet.
-stopped_at: Completed 07-export-confetti/07-01-PLAN.md
-last_updated: "2026-05-06T16:22:30.477Z"
-last_activity: 2026-05-06 — v1.1 roadmap created
+status: planning
+stopped_at: Completed 08-transport-abstraction-host-connection-ux/08-01-PLAN.md
+last_updated: "2026-05-06T20:11:35.441Z"
+last_activity: 2026-05-06 — v1.2 roadmap created (Phases 8–9)
 progress:
-  total_phases: 2
+  total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 7
+  completed_plans: 5
   percent: 0
 ---
 
@@ -21,39 +21,35 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-06)
 
 **Core value:** The host can run a multi-demo applause contest end-to-end on a single laptop, with each demo's score captured fairly and the winner revealed with confidence.
-**Current focus:** v1.1 — per-demo metadata, export, confetti
+**Current focus:** v1.2 — Local Network Projector Mode
 
 ## Current Position
 
-Milestone: v1.1 Metadata + Export — PLANNING
-Status: Roadmap created. Phase 6 (Per-Demo Metadata) and Phase 7 (Export + Confetti) defined. No plans written yet.
-Last activity: 2026-05-06 — v1.1 roadmap created
+Milestone: v1.2 Local Network Projector Mode — ROADMAP READY
+Phase: 8 — Transport Abstraction + Host Connection UX (not started)
+Status: Roadmap created. Ready to plan Phase 8.
+Last activity: 2026-05-06 — v1.2 roadmap created (Phases 8–9)
 
 Progress: [__________] 0%
 
-Next step: `/gsd:plan-phase 6`
+Next step: `/gsd:plan-phase 8`
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 4 (v1.1)
+- Average duration: ~3 min/plan
+- Total execution time: ~12 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-
-**Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+| Phase 06-per-demo-metadata | 2 | 4 tasks | ~3 min |
+| Phase 07-export-confetti | 2 | 4 tasks | ~3 min |
 
 *Updated after each plan completion*
-| Phase 06-per-demo-metadata P01 | 2 | 2 tasks | 4 files |
-| Phase 06-per-demo-metadata P02 | 4 | 2 tasks | 5 files |
-| Phase 07-export-confetti P02 | 2 | 2 tasks | 4 files |
-| Phase 07-export-confetti P01 | 3 | 2 tasks | 5 files |
+| Phase 08-transport-abstraction-host-connection-ux P01 | 5 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -62,35 +58,29 @@ Next step: `/gsd:plan-phase 6`
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Roadmap: 2-phase structure — metadata (Phase 6) and export+confetti (Phase 7) derived from v1.1 requirements
-- Architecture context: React 19 + TypeScript + Vite + Tailwind v4 + Zustand; each demo is `{ id: string; name: string }` in store — META-01/META-02 extend this shape
-- BroadcastBridge derives ProjectorMessage from store; the 'measuring' variant will need subject + logoUrl fields to satisfy META-03
-- Logo files uploaded by host must be converted to data URLs (FileReader) before localStorage storage (META-02, META-04)
-- partialize in Zustand persist must include new demo fields (subject, logoUrl) or META-04 will silently fail
-- confetti (PROJ-05) is projector-only, triggered on the 'reveal' screen in ProjectorReveal.tsx — does not touch host view
-- v1.0 archived: 26/26 requirements satisfied, Lighthouse 100/100/100/90, deployed at https://xelareiam.github.io/Noisium/
-- [Phase 06-per-demo-metadata]: partialize unchanged — demos array already included; subject/logoUrl persist inside demo objects automatically without a new top-level localStorage key
-- [Phase 06-per-demo-metadata]: Conditional spread with truthy check omits keys entirely when subject/logoUrl are undefined or empty string — no undefined-valued keys in broadcast payload
-- [Phase 06-per-demo-metadata]: ProjectorMessageState.demos extended to include subject?/logoUrl? so deriveProjectorMessage can read metadata without coupling to the full Demo type from useAppStore
-- [Phase 06-per-demo-metadata]: FileReader mock uses class (not vi.fn()) as constructor — vi.fn() cannot be used with new in vitest
-- [Phase 06-per-demo-metadata]: requestAnimationFrame mock returns fake ID without calling callback — prevents infinite recursion from ProjectorSuspense rAF loop
-- [Phase 07-export-confetti]: Hand-rolled Canvas RAF confetti (no npm library) wired into ProjectorReveal via active prop; jsdom guard and structural-only tests; z-index stacking with position:relative container
-- [Phase 07-export-confetti]: vi.hoisted() used for mock fn variables in vi.mock factories to avoid hoisting initialisation errors
-- [Phase 07-export-confetti]: DownloadCsvButton is self-contained (reads store internally) — no external canReveal prop, gate logic co-located
-- [Phase 07-export-confetti]: csvField() always quotes name/subject fields; numeric and enum fields are unquoted plain strings
+- v1.1 shipped: subject/logo per demo, CSV export, confetti — all 6 requirements satisfied, 261 tests passing
+- Transport abstraction needed: BroadcastChannel currently hardwired in src/lib/broadcastChannel.ts; BroadcastBridge.tsx and ProjectorView.tsx both consume it directly — need a pluggable transport interface before WebSocket mode can be added
+- CLI will serve the built app over HTTP (from dist/) + WebSocket relay on the same port — avoids HTTPS mixed-content issues
+- Same ProjectorMessage discriminated union used for both transports — no privacy invariant changes needed
+- Feature toggle stored in Zustand (persisted) — user's choice survives page refresh
+- Phase 8 covers all React/TypeScript work: transport abstraction, toggle UI, LAN URL display, connection status, reconnect UX
+- Phase 9 covers the Node.js companion CLI package: HTTP static server + WebSocket relay, LAN IP detection, zero-config startup
+- [Phase 08-transport-abstraction-host-connection-ux]: Transport factory owns singleton lifecycle — components call getTransport(mode) only, never close() directly
+- [Phase 08-transport-abstraction-host-connection-ux]: wsConnectionStatus is transient (not persisted) — connection resets to idle on each page load
+- [Phase 08-transport-abstraction-host-connection-ux]: lanModeEnabled survives clearSession — device preference, not session data
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-- META-02: FileReader is async; ensure logo upload UX handles in-progress state so host cannot accidentally submit before conversion completes
-- META-04: localStorage quota is finite — very large logo images (high-res photos) could hit quota. Consider resizing or capping file size at upload time.
-- PROJ-05: Verify chosen confetti library (or hand-rolled Canvas/CSS) does not block the main thread for the winner-reveal transition duration
+- Mixed content: GitHub Pages is HTTPS; a local `ws://` server from the CLI will be blocked if the user loads the app from github.io. CLI must serve its own HTTP copy of the app to avoid this.
+- LAN IP detection in Node.js: `os.networkInterfaces()` can return multiple IPs (WiFi, Ethernet, VPN). Need heuristic to pick the most useful one.
+- WebSocket reconnect: projector tab must reconnect automatically if the CLI restarts mid-show.
 
 ## Session Continuity
 
-Last session: 2026-05-06T16:22:30.474Z
-Stopped at: Completed 07-export-confetti/07-01-PLAN.md
+Last session: 2026-05-06T20:11:35.439Z
+Stopped at: Completed 08-transport-abstraction-host-connection-ux/08-01-PLAN.md
 Resume file: None

@@ -151,5 +151,5 @@ Plans:
 | 5. Polish Broadcast Architecture | v1.0 | 1/1 | Complete | 2026-05-06 |
 | 6. Per-Demo Metadata | v1.1 | 2/2 | Complete | 2026-05-06 |
 | 7. Export + Confetti | v1.1 | 2/2 | Complete | 2026-05-06 |
-| 8. Transport Abstraction + Host Connection UX | v1.2 | 0/3 | Not started | - |
+| 8. Transport Abstraction + Host Connection UX | 1/3 | In Progress|  | - |
 | 9. Companion CLI Server | v1.2 | 0/TBD | Not started | - |

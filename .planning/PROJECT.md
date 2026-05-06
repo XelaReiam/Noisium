@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A browser-based applause meter for conference "DemoJam" segments — events where companies present an app in 3 minutes and the audience picks the winner by clapping rather than voting. The host pre-loads the demo lineup, runs each demo through a fixed measurement window, captures average dB from the device microphone, and reveals the winner at the end. Built for a community DemoJam this Friday, then open-sourced for other organizers to reuse.
+A browser-based applause meter for conference "DemoJam" segments — events where companies present an app in 3 minutes and the audience picks the winner by clapping rather than voting. The host pre-loads the demo lineup, runs each demo through a fixed measurement window, captures average dB from the device microphone, and reveals the winner at the end. Built for a community DemoJam and open-sourced for other organizers to reuse.
 
 ## Core Value
 
@@ -14,70 +14,102 @@ The host can run a multi-demo applause contest end-to-end on a single laptop on 
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- ✓ Host pre-loads a list of demos (company name minimum) before the event — v1.0
+- ✓ Pre-show baseline calibration (~3s) captures room ambient noise floor — v1.0
+- ✓ Configurable measurement window length (5/8/10 seconds), adjustable in-app — v1.0
+- ✓ Host triggers measurement per demo: countdown → fixed window → captures average dB — v1.0
+- ✓ Audience-facing projector view shows suspense (no live meter) during measurement — v1.0
+- ✓ Score captured silently and shown only privately to the host after each demo — v1.0
+- ✓ Host can skip a demo (no-show) or redo a measurement with confirmation — v1.0
+- ✓ At the end of all demos, projector reveals winner only (no full leaderboard) — v1.0
+- ✓ State persists locally (localStorage) so a tab refresh mid-event doesn't lose scores — v1.0
+- ✓ Clean, modern projector styling (big typography, conference-professional) — v1.0
+- ✓ Works in modern desktop browsers using Web Audio API mic-based dB measurement — v1.0
+- ✓ AGC disabled and verified via track.getSettings() — v1.0
+- ✓ App blocks plain HTTP and shows HTTPS-required message — v1.0
+- ✓ Projector tab syncs via BroadcastChannel; reconnects on close+reopen — v1.0
+- ✓ BroadcastChannel messages carry only projector-safe slice (no raw scores) — v1.0
+- ✓ Host can add a subject (app name / topic) per demo — v1.1
+- ✓ Host can upload a logo image per demo; preview shown in editor — v1.1
+- ✓ Projector suspense screen shows company name, subject, and logo during measurement — v1.1
+- ✓ Subject and logo persist to localStorage with the session — v1.1
+- ✓ Host can download session results as CSV (name, subject, score, rank, status, winner) — v1.1
+- ✓ Projector shows confetti animation on winner reveal — v1.1
 
 ### Active
 
-<!-- v1 scope for Friday's conference. -->
+<!-- v1.2 scope: Local Network Projector Mode -->
 
-- [ ] Host pre-loads a list of demos (company name minimum) before the event
-- [ ] Pre-show baseline calibration step (room ambient + sample test clap) sets the scale
-- [ ] Configurable measurement window length (e.g. 5/8/10 seconds), adjustable in-app
-- [ ] Host triggers measurement per demo: countdown → fixed window → captures **average** dB
-- [ ] Audience-facing projector view shows suspense (no live meter) during measurement
-- [ ] After each demo, score is captured silently and shown **only privately to the host** (audience sees nothing yet)
-- [ ] Host can **skip** a demo (no-show) or **redo** a measurement (glitch / bad capture)
-- [ ] At the end of all demos, projector view reveals **winner only** (no full leaderboard)
-- [ ] State persists locally (localStorage / IndexedDB) so a tab refresh mid-event doesn't lose scores
-- [ ] Clean, modern projector styling (big numbers, tasteful, conference-professional)
-- [ ] Works in a modern desktop browser using the Web Audio API for mic-based dB measurement
+- [ ] Host can toggle "Local Network Mode" in the app (default: same-machine BroadcastChannel)
+- [ ] When Local Network Mode is on, host sees their LAN IP and instructions to open the projector URL on another machine
+- [ ] A companion CLI (`npx noisium`) starts a local WebSocket relay + serves the app over HTTP on the LAN
+- [ ] When Local Network Mode is on, BroadcastBridge switches from BroadcastChannel to WebSocket transport
+- [ ] Projector machine connects to the CLI-served app at `http://<LAN-IP>:<PORT>/#/projector` and receives messages via WebSocket
+- [ ] Connection status visible on host (connected / waiting / disconnected)
+- [ ] If WebSocket connection drops, host sees a warning; projector shows reconnecting state
 
 ### Out of Scope
 
-<!-- Deferred post-Friday or excluded entirely. Each entry has a reason. -->
+<!-- Deferred post-v1.1 or excluded entirely. -->
 
-- **Multi-device session sync** (orga team joins via link, host triggers all devices simultaneously, average across devices) — Originally requested as the differentiator, deferred to v2: real-time sync across devices is 1–2 days of fragile work, too risky for the Friday deadline. Cut to keep v1 shippable.
-- **Per-demo logo / tagline / presenter metadata on suspense screen** — v2 polish; v1 ships with company name only.
-- **Audio recording** of each applause (clips for posterity / sharing) — v2 nice-to-have; not core to picking the winner.
-- **Sound and visual feedback** (confetti, cheering animations, rising bar visualizations) — v2 polish; v1 reveal can be plain.
-- **Sponsor / event branding slots** (logos, themed colors, event-specific styling) — v2; v1 uses generic clean styling. Project is generic from day one, branding is just deferred.
-- **Audience devices vote-by-clap** (every audience member opens the app on their phone, distributed measurement) — Out entirely. Scope and complexity not justified for the value over single-mic measurement.
-- **Animated leaderboard reveal** — Replaced with simpler "winner only" reveal per host preference.
-- **Live dB meter visible to audience during measurement** — Replaced with suspense / dramatic reveal style.
-- **Full leaderboard reveal** at end — Replaced with winner-only.
-- **Per-demo score reveal to audience** between demos — Host-private only; preserves suspense for the final winner reveal.
+- **Multi-device measurement averaging** (multiple mics around the hall, averaged score) — deferred to v2: requires multi-client coordination logic beyond relay.
+- **Per-demo logo / tagline / presenter metadata on suspense screen** — shipped in v1.1.
+- **Audio recording** of each applause (clips for posterity / sharing) — v2 nice-to-have.
+- **Sponsor / event branding slots** (logos, themed colors, event-specific styling) — v2; v1 uses generic clean styling.
+- **Audience devices vote-by-clap** — Out entirely. Scope not justified over single-mic.
+- **Animated leaderboard reveal** — Replaced with winner-only reveal.
+- **Live dB meter visible to audience during measurement** — Anti-feature (strategic clapping distorts average).
+- **Full leaderboard reveal at end** — Anti-feature at professional conferences.
+- **Per-demo score reveal to audience between demos** — Host-private only; preserves suspense.
+
+## Current Milestone: v1.2 Local Network Projector Mode
+
+**Goal:** Allow the projector to run on a separate machine on the same LAN — host toggles "Local Network Mode", runs `npx noisium` to start a local relay, and the projector machine connects via browser.
+
+**Target features:**
+- In-app feature toggle (BroadcastChannel default → WebSocket when enabled)
+- Companion CLI (`npx noisium`) — Node.js WebSocket relay + static app server
+- LAN IP/URL discovery and display in host UI
+- Connection status indicators on both host and projector
+- Graceful reconnect on drop
 
 ## Context
 
-- This is for a community-organized conference happening **Friday 2026-05-08** (3 days from project start). Hard deadline.
-- The host (presumably the user or a fellow organizer) operates the app live from a single laptop connected to the projector; same device, same physical spot, same room for every demo — so raw dB readings are "fair enough" once a single baseline calibration is done.
-- Web microphone dB readings are inherently relative (depend on device, mic gain, distance, room acoustics). Baseline calibration before the show normalizes the scale; recalibrating per-demo was considered and rejected as flow friction.
-- The voting mechanic — clap, not click — is part of the event's identity. No physical buttons, no QR-code voting, no app downloads for attendees.
-- Project will be **open-sourced** so other community DemoJam organizers can reuse it. v1 should already be generic (no hardcoded conference identity); the configurable branding feature is the only thing deferred.
-
-## Constraints
-
-- **Timeline**: v1 must ship by **Friday 2026-05-08** — 3 days from today. Drives ruthless scope cutting and "boring tech" defaults.
-- **Platform**: Browser-only (no native, no install on host or audience side). Uses Web Audio API / `getUserMedia` for microphone access.
-- **Network**: Online OK at the venue, no offline-first requirement. (Multi-device sync was the only thing that hard-required network; deferred.)
-- **Operator**: Single host on a single device for v1. Designed around the host's UX, not an audience-facing one.
-- **Open source**: Code will be public, so generic-from-day-one (no hardcoded event branding), and reasonable docs for v1 (README minimum, polish later).
+- v1.1 shipped 2026-05-06 — per-demo metadata (subject, logo), CSV export, confetti animation.
+- 261 passing Vitest tests. Tech stack: Vite + React 19 + TypeScript + Tailwind v4 + Zustand + Web Audio API.
+- BroadcastChannel currently hardwired in `src/lib/broadcastChannel.ts` and consumed by `BroadcastBridge.tsx` (host) and `ProjectorView.tsx` (projector). Transport abstraction needed before adding WebSocket.
+- CLI will be a separate npm package (`packages/noisium-server`) in a monorepo or a simple `server/` directory — to be decided in research.
+- Known limitations: AGC constraint application can vary by Windows audio driver — recommend testing `track.getSettings()` on the actual event laptop before the show.
 
 ## Key Decisions
 
-<!-- Decisions made during initial questioning. Add throughout the project. -->
-
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Single-device, host-only operation for v1 | Multi-device sync is the originally-requested feature but adds 1–2 days of real-time wiring; cut to make Friday | — Pending |
-| Fixed measurement window with **average** dB (not peak, not manual stop) | Average smooths out a single loud whoop; fixed window keeps pacing consistent and fair across demos | — Pending |
-| Window length configurable in-app | Host can dial in fairness vs. pacing on the day; no recompile | — Pending |
-| One pre-show baseline calibration (not per-demo recalibration) | Same device, same spot — single calibration is "fair enough" without flow friction during the show | — Pending |
-| Score hidden during the show; **winner only** at the end | Host wants suspense; avoids social pressure of audiences trying to "beat" the previous score | — Pending |
-| Host sees each demo's score privately right after capture | Confirms the reading was recorded, lets host catch glitches and trigger a redo | — Pending |
-| State persists locally (localStorage / IndexedDB) | Tab refresh mid-event is a foreseeable disaster; cheap to prevent | — Pending |
-| Audio recording, confetti, sponsor branding, per-demo logos/taglines/presenters all deferred | v2 polish; not load-bearing for picking the winner | — Pending |
-| Open-sourced, generic from day one (no hardcoded conference branding) | Cheaper than retrofitting later; the open-source aim is real, not aspirational | — Pending |
+| Single-device, host-only operation for v1 | Multi-device sync is 1–2 days of fragile work; cut to make Friday | ✓ Good — worked as designed on the day |
+| Fixed measurement window with **average** dB (not peak, not manual stop) | Average smooths out a single loud whoop; fixed window keeps pacing fair | ✓ Good — delta-dB scoring proved reliable |
+| Window length configurable in-app (5/8/10s) | Host can dial in fairness vs. pacing on the day; no recompile | ✓ Good — useful flexibility with no complexity cost |
+| One pre-show baseline calibration (recalibration available, not per-demo forced) | Same device, same spot; single calibration is "fair enough" without friction | ✓ Good — Phase 5 removed spurious demo-count gate so pre-calibration works before adding demos |
+| Score hidden during the show; **winner only** at the end | Host wants suspense; avoids anchor bias in later clapping | ✓ Good — projector privacy invariant holds at type level and runtime |
+| Host sees each demo's score privately right after capture | Confirms reading was recorded, lets host catch glitches and redo | ✓ Good — skip/redo worked well as escape hatches |
+| State persists locally (localStorage) | Tab refresh mid-event is a foreseeable disaster; cheap to prevent | ✓ Good — partialize pattern cleanly separates persisted vs. transient |
+| HashRouter (no basename issues with GitHub Pages) | Vite base and HashRouter basename are orthogonal; combining double-encodes | ✓ Good — hash routing transparent to end users |
+| AudioEngine as module-level singleton | All consumers share one permission-granted instance; per-component broke calibration | ✓ Good — discovered in Phase 3 wave 4, fixed immediately |
+| BroadcastBridge as render-null host relay | Store-write-then-derive eliminates imperative channel calls scattered across components | ✓ Good — Phase 5 unified all posts through BroadcastBridge cleanly |
+| ProjectorMessage discriminated union with no score fields | Type-level privacy invariant enforced at compile time + 26+ runtime tests | ✓ Good — projector tab cannot accidentally show scores |
+| Audio recording, confetti, sponsor branding, per-demo logos deferred | v2 polish; not load-bearing for picking the winner | ✓ Good — ruthless scoping made Friday deadline feasible |
+| Open-sourced, generic from day one (no hardcoded conference branding) | Cheaper than retrofitting later; the open-source aim is real | ✓ Good — no event-specific content in codebase |
+
+## Constraints
+
+- **Timeline**: v1.0 shipped on 2026-05-06, ahead of Friday 2026-05-08 hard deadline.
+- **Platform**: Browser-only (no native, no install). Web Audio API / `getUserMedia` for microphone access.
+- **Network**: Online OK at venue, no offline-first requirement. (Multi-device sync deferred to v2.)
+- **Operator**: Single host on a single device for v1.
+- **Open source**: Code is public and generic from day one.
+
+| Local Network Mode toggle with BroadcastChannel default | Keeps same-machine flow intact; LAN mode is opt-in upgrade | — Pending |
+| Companion CLI serves app + WebSocket relay | GitHub Pages is static — can't host WS; CLI is the only clean option for offline/LAN use | — Pending |
+| Transport abstraction (pluggable channel interface) | BroadcastBridge must switch transport at runtime; abstraction keeps component code unchanged | — Pending |
 
 ---
-*Last updated: 2026-05-05 after initialization*
+*Last updated: 2026-05-06 after v1.1 milestone, v1.2 started*
