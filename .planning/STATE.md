@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: MVP
 status: planning
-stopped_at: Completed 08-transport-abstraction-host-connection-ux/08-01-PLAN.md
-last_updated: "2026-05-06T20:11:35.441Z"
+stopped_at: Completed 08-transport-abstraction-host-connection-ux/08-03-PLAN.md
+last_updated: "2026-05-06T20:16:51.165Z"
 last_activity: 2026-05-06 — v1.2 roadmap created (Phases 8–9)
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -50,6 +50,7 @@ Next step: `/gsd:plan-phase 8`
 
 *Updated after each plan completion*
 | Phase 08-transport-abstraction-host-connection-ux P01 | 5 | 2 tasks | 5 files |
+| Phase 08-transport-abstraction-host-connection-ux P03 | 8 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - [Phase 08-transport-abstraction-host-connection-ux]: Transport factory owns singleton lifecycle — components call getTransport(mode) only, never close() directly
 - [Phase 08-transport-abstraction-host-connection-ux]: wsConnectionStatus is transient (not persisted) — connection resets to idle on each page load
 - [Phase 08-transport-abstraction-host-connection-ux]: lanModeEnabled survives clearSession — device preference, not session data
+- [Phase 08-transport-abstraction-host-connection-ux]: ProjectorView accesses WS lifecycle via cast to _ws — no onStatusChange added to transport (scope preserved)
+- [Phase 08-transport-abstraction-host-connection-ux]: retryDelayRef doubles in setTimeout callback ensuring doubling tracks actual retry attempts not rapid-close sequences
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-06T20:11:35.439Z
-Stopped at: Completed 08-transport-abstraction-host-connection-ux/08-01-PLAN.md
+Last session: 2026-05-06T20:16:51.160Z
+Stopped at: Completed 08-transport-abstraction-host-connection-ux/08-03-PLAN.md
 Resume file: None
