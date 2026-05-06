@@ -133,13 +133,17 @@ export function ProjectorView() {
       return <ProjectorIdle cornerStatus="Setting up…" />;
     case 'countdown':
       return <ProjectorCountdown countdownSeconds={message.countdownSeconds} />;
-    case 'measuring':
+    case 'measuring': {
+      const { demoName, remainingSeconds, demoSubject, demoLogoUrl } = message;
       return (
         <ProjectorSuspense
-          demoName={message.demoName}
-          remainingSeconds={message.remainingSeconds}
+          demoName={demoName}
+          remainingSeconds={remainingSeconds}
+          demoSubject={demoSubject}
+          demoLogoUrl={demoLogoUrl}
         />
       );
+    }
     case 'reveal-buildup':
       // Projector-internal variant. Render the idle screen as a safe fallback —
       // this variant is only used internally and the host never posts it.
