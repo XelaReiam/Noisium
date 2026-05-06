@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { useAppStore } from '../store/useAppStore';
 import { useAudioEngine } from '../hooks/useAudioEngine';
-import { getNoisiumChannel } from '../lib/broadcastChannel';
 
 type CalibrateState =
   | { phase: 'idle' }
@@ -18,7 +17,6 @@ const CONFIRMATION_DURATION_MS = 1500;
  *
  * Disabled until:
  *   - micPermission === 'granted' (helper text: "Enable microphone to calibrate")
- *   - AND demos.length >= 1     (helper text: "Add a demo to enable calibration")
  *   - AND no measurement is currently running
  *
  * Click flow:
@@ -38,10 +36,10 @@ const CONFIRMATION_DURATION_MS = 1500;
 export function CalibrateButton() {
   const engineRef = useAudioEngine();
   const micPermission = useAppStore((s) => s.micPermission);
-  const demos = useAppStore((s) => s.demos);
   const calibrationAmbientDb = useAppStore((s) => s.calibrationAmbientDb);
   const measuringDemoId = useAppStore((s) => s.measuringDemoId);
   const setCalibrationAmbient = useAppStore((s) => s.setCalibrationAmbient);
+  const setMeasurePhase = useAppStore((s) => s.setMeasurePhase);
 
   const [state, setState] = useState<CalibrateState>({ phase: 'idle' });
 
@@ -57,18 +55,12 @@ export function CalibrateButton() {
 
   // Disable conditions
   const noPermission = micPermission !== 'granted';
-  const noDemos = demos.length === 0;
   const measurementRunning = measuringDemoId !== null;
   const inFlight = state.phase !== 'idle' && state.phase !== 'done' && state.phase !== 'error';
-  const disabled = noPermission || noDemos || measurementRunning || inFlight;
+  const disabled = noPermission || measurementRunning || inFlight;
 
-  // Helper text decision (highest-priority disable wins)
-  const helperText =
-    noPermission
-      ? 'Enable microphone to calibrate'
-      : noDemos
-        ? 'Add a demo to enable calibration'
-        : '';
+  // Helper text decision
+  const helperText = noPermission ? 'Enable microphone to calibrate' : '';
 
   const label =
     state.phase === 'capturing'
@@ -82,11 +74,9 @@ export function CalibrateButton() {
   async function handleClick(): Promise<void> {
     if (disabled || !engineRef.current) return;
 
-    // Broadcast calibration start to projector. The projector renders the
-    // wordmark + "Setting up…" corner status. Direct post (not via the store
-    // → BroadcastBridge derivation path) because calibration is a UI-owned
-    // atomic flow.
-    getNoisiumChannel().postMessage({ phase: 'calibrating' });
+    // Signal calibrating state to the store; BroadcastBridge derives and
+    // broadcasts { phase: 'calibrating' } to the projector automatically.
+    setMeasurePhase('calibrating');
 
     // 1. Inline 3-2-1 countdown (1 second per digit)
     setState({ phase: 'countdown', value: 3 });
@@ -108,19 +98,20 @@ export function CalibrateButton() {
         const { ambientDbFs } = await engineRef.current.calibrate();
         setCalibrationAmbient(ambientDbFs);
         setState({ phase: 'done' });
-        // Brief inline confirmation, then return to idle on host AND projector
+        // Brief inline confirmation, then return to idle; store write triggers
+        // BroadcastBridge to broadcast { phase: 'idle' } to the projector.
         timeoutsRef.current.push(
           window.setTimeout(() => {
             setState({ phase: 'idle' });
-            getNoisiumChannel().postMessage({ phase: 'idle' });
+            setMeasurePhase('idle');
           }, CONFIRMATION_DURATION_MS),
         );
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Calibration failed.';
         setState({ phase: 'error', message });
-        // Calibration failed — return projector to idle (no audience-visible
-        // hint that something went wrong; host sees the error in the inline UI).
-        getNoisiumChannel().postMessage({ phase: 'idle' });
+        // Return projector to idle; BroadcastBridge derives { phase: 'idle' }
+        // from the store write — no audience-visible error hint on projector.
+        setMeasurePhase('idle');
         timeoutsRef.current.push(
           window.setTimeout(() => setState({ phase: 'idle' }), 2500),
         );

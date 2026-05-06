@@ -3,7 +3,6 @@ import { useAppStore } from '../store/useAppStore';
 import { useAudioEngine } from '../hooks/useAudioEngine';
 import { CountdownOverlay } from './CountdownOverlay';
 import { MeasurementAbortGuard } from './MeasurementAbortGuard';
-import { getNoisiumChannel } from '../lib/broadcastChannel';
 
 type OverlayPhase =
   | { kind: 'countdown'; value: 3 | 2 | 1 }
@@ -108,11 +107,9 @@ export function MeasurementOrchestrator() {
             // moves the store to measurePhase='idle' and triggers the idle
             // broadcast. The projector's own window-end → idle transition (also
             // ~1200ms) lands harmoniously.
-            const demoNameForWindowEnd = demoName;
             setMeasurePhase('window-end');
-            // Also broadcast directly so a projector that opens mid-window-end
-            // receives the right message even if BroadcastBridge's dedup skips it
-            getNoisiumChannel().postMessage({ phase: 'window-end', demoName: demoNameForWindowEnd });
+            // BroadcastBridge subscribes to the store and derives
+            // { phase: 'window-end', demoName } automatically from this write.
             const WINDOW_END_HOLD_MS = 1200;
             timeoutsRef.current.push(
               window.setTimeout(() => {
