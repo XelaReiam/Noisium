@@ -57,7 +57,7 @@ export type ProjectorReplyMessage =
 export interface ProjectorMessageState {
   demos: { id: string; name: string }[];
   measuringDemoId: string | null;
-  measurePhase: 'idle' | 'countdown' | 'measuring' | 'window-end';
+  measurePhase: 'idle' | 'calibrating' | 'countdown' | 'measuring' | 'window-end';
   windowSeconds: number;
   revealActive: boolean;
   revealWinner: { name: string } | { names: string[] } | null;
@@ -125,13 +125,14 @@ export function canRevealWinner(
  *
  * Precedence (highest first):
  *   1. revealActive + revealWinner present → 'reveal' (buildup animates on projector)
- *   2. measuringDemoId set → countdown / measuring / window-end (per measurePhase)
- *   3. otherwise → 'idle' (the wordmark default)
+ *   2. measurePhase === 'calibrating' → 'calibrating' (independent of measuringDemoId)
+ *   3. measuringDemoId set → countdown / measuring / window-end (per measurePhase)
+ *   4. otherwise → 'idle' (the wordmark default)
+ *
+ * Calibrating is now state-derived: CalibrateButton writes setMeasurePhase('calibrating')
+ * to the store; BroadcastBridge derives { phase: 'calibrating' } from this branch.
  *
  * NOT covered here:
- *   - 'calibrating': sent imperatively by CalibrateButton (Plan 04 wires this) —
- *     calibration is an atomic UI transition that doesn't need to round-trip
- *     through Zustand.
  *   - 'heartbeat-host': sent on a setInterval by BroadcastBridge — not a
  *     state-derived message.
  */
@@ -140,6 +141,11 @@ export function deriveProjectorMessage(state: ProjectorMessageState): ProjectorM
   // the buildup → name regardless of any other state.
   if (state.revealActive && state.revealWinner !== null) {
     return { phase: 'reveal', winner: state.revealWinner };
+  }
+
+  // Priority 2: calibrating — independent of measuringDemoId
+  if (state.measurePhase === 'calibrating') {
+    return { phase: 'calibrating' };
   }
 
   // Active measurement sub-phases

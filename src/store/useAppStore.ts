@@ -47,7 +47,7 @@ export interface AppState {
 
   // Phase 4 transient fields — projector mirroring state
   // None of these are persisted (partialize unchanged)
-  measurePhase: 'idle' | 'countdown' | 'measuring' | 'window-end';
+  measurePhase: 'idle' | 'calibrating' | 'countdown' | 'measuring' | 'window-end';
   revealActive: boolean;
   revealWinner: { name: string } | { names: string[] } | null;
   projectorConnected: boolean;
@@ -88,7 +88,7 @@ export interface AppState {
   clearSession: () => void;
 
   // Phase 4 actions
-  setMeasurePhase: (phase: 'idle' | 'countdown' | 'measuring' | 'window-end') => void;
+  setMeasurePhase: (phase: 'idle' | 'calibrating' | 'countdown' | 'measuring' | 'window-end') => void;
   triggerReveal: () => void;
   resetReveal: () => void;
   setProjectorConnected: (connected: boolean) => void;

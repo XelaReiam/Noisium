@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-05-06T10:25:00.000Z"
-last_activity: 2026-05-06 — Phase 4 Plan 4 complete (BroadcastBridge + MeasurementOrchestrator wiring + CalibrateButton broadcasts, 192 tests passing)
+status: completed
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-05-06T08:52:35.164Z"
+last_activity: 2026-05-06 — Phase 4 Plan 5 complete (two-surface host UI + manual E2E verification, all 26 requirements verified, v1.0 milestone complete)
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 19
-  completed_plans: 17
-  percent: 89
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-05)
 
 **Core value:** The host can run a multi-demo applause contest end-to-end on a single laptop, with each demo's score captured fairly and the winner revealed with confidence.
-**Current focus:** Phase 4 — Two-Surface Architecture (Phase 3 complete 2026-05-05)
+**Current focus:** v1.0 COMPLETE — all 4 phases and all 26 requirements delivered and verified
 
 ## Current Position
 
-Phase: 4 of 4 (Two-Surface Architecture) — IN PROGRESS
-Plan: 4 of 5 in current phase (4 done, 1 remaining)
-Status: Plan 04-04 complete — BroadcastBridge render-null relay + MeasurementOrchestrator wiring + CalibrateButton direct broadcasts, 192 tests passing
-Last activity: 2026-05-06 — Phase 4 Plan 4 complete (BroadcastBridge + MeasurementOrchestrator wiring + CalibrateButton broadcasts, 192 tests passing)
+Phase: 4 of 4 (Two-Surface Architecture) — COMPLETE
+Plan: 5 of 5 in current phase (all done)
+Status: Plan 04-05 complete — ProjectorToolbar + HostView wire-up + manual E2E sign-off on all 6 Phase 4 requirements on deployed URL. v1.0 milestone achieved.
+Last activity: 2026-05-06 — Phase 4 Plan 5 complete (two-surface host UI + manual E2E verification, all 26 requirements verified)
 
-Progress: [#########░] 89%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [#########░] 89%
 | Phase 03-calibration-measurement-show-control P05 | 3min | 4 tasks | 5 files |
 | Phase 03-calibration-measurement-show-control P06 | ~2h | 3 tasks | 2 files |
 | Phase 04-two-surface-architecture P02 | 5min | 1 tasks | 2 files |
+| Phase 04 P05 | 30min | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,9 @@ Recent decisions affecting current work:
 - [Phase 04-two-surface-architecture P04]: BroadcastBridge uses JSON.stringify comparison of last sent message for deduplication — prevents identical consecutive store updates from broadcasting unchanged ProjectorMessage
 - [Phase 04-two-surface-architecture P04]: CalibrateButton broadcasts calibrating/idle directly to channel (not via store+BroadcastBridge) — calibration is a UI-owned atomic flow with no Zustand transient field needed
 - [Phase 04-two-surface-architecture P04]: MeasurementOrchestrator defers completeMeasure by 1200ms (WINDOW_END_HOLD_MS) after setMeasurePhase('window-end') — BroadcastBridge broadcasts window-end; projector's own 1200ms timer runs harmoniously before idle arrives
+- [Phase 04]: ProjectorToolbar standalone TDD-tested component keeps HostView clean and allows isolated unit testing
+- [Phase 04]: header strip separate from main so MeasurementOrchestrator absolute overlay covers exactly main, not the header
+- [Phase 04]: BroadcastBridge mounted as render-null sibling before visible UI tree, consistent with CrossDayCheckEffect pattern
 
 ### Pending Todos
 
@@ -131,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-06T10:25:00.000Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-05-06T08:52:19.751Z
+Stopped at: Completed 04-05-PLAN.md
 Resume file: None

@@ -259,6 +259,25 @@ describe('deriveProjectorMessage', () => {
   it('returns idle for the default state', () => {
     expect(deriveProjectorMessage(baseState)).toEqual({ phase: 'idle' });
   });
+
+  it('returns calibrating when measurePhase === "calibrating" (measuringDemoId null)', () => {
+    const state: ProjectorMessageState = {
+      ...baseState,
+      measurePhase: 'calibrating',
+      measuringDemoId: null,
+    };
+    expect(deriveProjectorMessage(state)).toEqual({ phase: 'calibrating' });
+  });
+
+  it('returns calibrating when measurePhase === "calibrating" even with measuringDemoId set (priority before measuring branch)', () => {
+    const state: ProjectorMessageState = {
+      ...baseState,
+      demos: [{ id: 'a', name: 'Alpha' }],
+      measurePhase: 'calibrating',
+      measuringDemoId: 'a',
+    };
+    expect(deriveProjectorMessage(state)).toEqual({ phase: 'calibrating' });
+  });
 });
 
 describe('privacy invariant: no scores ever in ProjectorMessage', () => {
@@ -294,6 +313,7 @@ describe('host invariant: deriveProjectorMessage never returns reveal-buildup', 
     ];
     const measurePhases: Array<ProjectorMessageState['measurePhase']> = [
       'idle',
+      'calibrating',
       'countdown',
       'measuring',
       'window-end',

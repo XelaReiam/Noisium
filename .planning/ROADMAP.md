@@ -9,7 +9,7 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 - [x] **Phase 1: Scaffold + State Layer** - Vite/React scaffold, Zustand store, localStorage persistence with session-date guard, HTTPS guard, deployment
 - [x] **Phase 2: Audio Pipeline** - AGC-disabled getUserMedia, AudioContext on user gesture, AnalyserNode, real-time level indicator, mic error states
 - [x] **Phase 3: Calibration + Measurement + Show Control** - Demo list setup, ambient baseline calibration, countdown-to-measurement, average dB scoring, skip/redo, private host scores
-- [ ] **Phase 4: Two-Surface Architecture** - BroadcastChannel bridge, projector URL/view, suspense screen, winner-only reveal, projector styling, tab reconnect
+- [x] **Phase 4: Two-Surface Architecture** - BroadcastChannel bridge, projector URL/view, suspense screen, winner-only reveal, projector styling, tab reconnect
 
 ## Phase Details
 
@@ -72,12 +72,27 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   3. The projector never displays raw per-demo scores; BroadcastChannel messages carry only `phase`, `currentDemoName`, `countdownSeconds`, and `winner`
   4. The projector shows a suspense screen (no live dB meter) while measurement is in progress
   5. After all demos are measured, the host triggers the reveal and the projector displays the winner only — no leaderboard, no other scores
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 - [x] 04-01-PLAN.md (Wave 1) — Wave 0: MockBroadcastChannel test mock + src/lib/projector.ts pure functions (deriveWinner, deriveProjectorMessage, canRevealWinner) + BroadcastChannel singleton
 - [x] 04-02-PLAN.md (Wave 2, parallel with 04-03) — Store extension: Phase 4 transients (measurePhase, revealActive/revealWinner, projectorConnected) + actions (triggerReveal, resetReveal, refreshProjectorHeartbeat) + clearSession update; partialize unchanged
 - [x] 04-03-PLAN.md (Wave 2, parallel with 04-02) — ProjectorView + 4 sub-components (Idle, Countdown, Suspense, Reveal); replaces ProjectorPlaceholder; locally-animated buildup→reveal + rAF progress bar + window-end auto-fade; PROJ-04 request-state on mount; projector heartbeat
 - [x] 04-04-PLAN.md (Wave 3) — BroadcastBridge render-null component (subscribe-and-derive + dedup + request-state reply + heartbeat) + MeasurementOrchestrator setMeasurePhase wiring + 1.2s window-end hold + CalibrateButton calibrating/idle direct broadcasts
-- [ ] 04-05-PLAN.md (Wave 4) — HostView wiring (mount BroadcastBridge, ProjectorToolbar header, Reveal/Reset buttons) + manual verification checkpoint covering all 6 Phase 4 requirements end-to-end on deployed URL with second monitor
+- [x] 04-05-PLAN.md (Wave 4) — HostView wiring (mount BroadcastBridge, ProjectorToolbar header, Reveal/Reset buttons) + manual verification checkpoint covering all 6 Phase 4 requirements end-to-end on deployed URL with second monitor — APPROVED 2026-05-06
+
+- [ ] **Phase 5: Polish Broadcast Architecture** - Remove extra calibration gate, unify all BroadcastChannel posts through BroadcastBridge
+
+### Phase 5: Polish Broadcast Architecture
+**Goal**: Remove the spurious demo-count gate from CalibrateButton so hosts can pre-calibrate before adding demos, and consolidate all BroadcastChannel messages through BroadcastBridge to eliminate the dual posting paths identified in the v1.0 audit.
+**Depends on**: Phase 4
+**Requirements**: CAL-01 (strengthened), MEAS-05 (SHOW-03 indirectly — unified channel path)
+**Gap Closure**: Closes tech debt TD-2 and TD-3 from v1.0-MILESTONE-AUDIT.md
+**Success Criteria** (what must be TRUE):
+  1. CalibrateButton is enabled as soon as `micPermission === 'granted'` — no demo-count gate; a host can calibrate the room before entering any demos
+  2. All BroadcastChannel messages flow through a single path: store state → BroadcastBridge → `deriveProjectorMessage` → channel; no component posts directly to the channel
+  3. Projector behaviour is identical to Phase 4: calibrating screen, countdown, suspense, window-end fade, reveal — just routed through the unified path
+  4. All existing tests pass; new tests cover the removed gate and the unified message path
+**Plans:** 1 plan
+- [ ] 05-01-PLAN.md — Widen measurePhase type to include 'calibrating', extend deriveProjectorMessage, refactor CalibrateButton + MeasurementOrchestrator to use store writes, update all affected tests
 
 ## Progress
 
@@ -86,4 +101,5 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 | 1. Scaffold + State Layer | 3/3 | Complete    | 2026-05-05 |
 | 2. Audio Pipeline | 5/5 | Complete    | 2026-05-05 |
 | 3. Calibration + Measurement + Show Control | 6/6 | Complete    | 2026-05-05 |
-| 4. Two-Surface Architecture | 4/5 | In Progress|  |
+| 4. Two-Surface Architecture | 5/5 | Complete    | 2026-05-06 |
+| 5. Polish Broadcast Architecture | 0/1 | Pending    |  |
