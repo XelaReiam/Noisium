@@ -8,7 +8,7 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 
 - [x] **Phase 1: Scaffold + State Layer** - Vite/React scaffold, Zustand store, localStorage persistence with session-date guard, HTTPS guard, deployment
 - [x] **Phase 2: Audio Pipeline** - AGC-disabled getUserMedia, AudioContext on user gesture, AnalyserNode, real-time level indicator, mic error states
-- [ ] **Phase 3: Calibration + Measurement + Show Control** - Demo list setup, ambient baseline calibration, countdown-to-measurement, average dB scoring, skip/redo, private host scores
+- [x] **Phase 3: Calibration + Measurement + Show Control** - Demo list setup, ambient baseline calibration, countdown-to-measurement, average dB scoring, skip/redo, private host scores
 - [ ] **Phase 4: Two-Surface Architecture** - BroadcastChannel bridge, projector URL/view, suspense screen, winner-only reveal, projector styling, tab reconnect
 
 ## Phase Details
@@ -54,13 +54,13 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   3. If the AudioContext loses `'running'` state or the mic device changes during measurement, the capture aborts and a visible warning appears — no silent bad reading is stored
   4. The host sees each demo's captured score privately after measurement completes
   5. The host can skip a demo (marked excluded) or redo a measurement with a brief confirmation; skipped and redone demos behave correctly in subsequent logic
-**Plans:** 4/6 plans executed
-- [ ] 03-01-PLAN.md (Wave 1) — Pure-function measurement.ts module + Phase 2 partialize-test update (Wave 0 foundation)
-- [ ] 03-02-PLAN.md (Wave 2, parallel with 03-03) — Store extension: Phase 3 fields/actions, partialize update, clearSession extension
-- [ ] 03-03-PLAN.md (Wave 2, parallel with 03-02) — AudioEngine.startMeasurement + calibrate methods + tests
-- [ ] 03-04-PLAN.md (Wave 3, parallel with 03-05) — DemoListEditor + DemoCard + DemoStatusBadge components
-- [ ] 03-05-PLAN.md (Wave 3, parallel with 03-04) — CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator
-- [ ] 03-06-PLAN.md (Wave 4) — HostView wiring + manual verification checkpoint
+**Plans:** 6/6 plans complete
+- [x] 03-01-PLAN.md (Wave 1) — Pure-function measurement.ts module + Phase 2 partialize-test update (Wave 0 foundation)
+- [x] 03-02-PLAN.md (Wave 2, parallel with 03-03) — Store extension: Phase 3 fields/actions, partialize update, clearSession extension
+- [x] 03-03-PLAN.md (Wave 2, parallel with 03-02) — AudioEngine.startMeasurement + calibrate methods + tests
+- [x] 03-04-PLAN.md (Wave 3, parallel with 03-05) — DemoListEditor + DemoCard + DemoStatusBadge components
+- [x] 03-05-PLAN.md (Wave 3, parallel with 03-04) — CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator
+- [x] 03-06-PLAN.md (Wave 4) — HostView wiring + manual verification checkpoint — APPROVED 2026-05-05
 
 ### Phase 4: Two-Surface Architecture
 **Goal**: The projector tab shows the right screen for each show state — suspense during measurement, blank/between between demos, winner-only at the end — and the host's raw scores are never visible on the projector at any point.
@@ -72,7 +72,12 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   3. The projector never displays raw per-demo scores; BroadcastChannel messages carry only `phase`, `currentDemoName`, `countdownSeconds`, and `winner`
   4. The projector shows a suspense screen (no live dB meter) while measurement is in progress
   5. After all demos are measured, the host triggers the reveal and the projector displays the winner only — no leaderboard, no other scores
-**Plans**: TBD
+**Plans:** 1/5 plans executed
+- [ ] 04-01-PLAN.md (Wave 1) — Wave 0: MockBroadcastChannel test mock + src/lib/projector.ts pure functions (deriveWinner, deriveProjectorMessage, canRevealWinner) + BroadcastChannel singleton
+- [ ] 04-02-PLAN.md (Wave 2, parallel with 04-03) — Store extension: Phase 4 transients (measurePhase, revealActive/revealWinner, projectorConnected) + actions (triggerReveal, resetReveal, refreshProjectorHeartbeat) + clearSession update; partialize unchanged
+- [ ] 04-03-PLAN.md (Wave 2, parallel with 04-02) — ProjectorView + 4 sub-components (Idle, Countdown, Suspense, Reveal); replaces ProjectorPlaceholder; locally-animated buildup→reveal + rAF progress bar + window-end auto-fade; PROJ-04 request-state on mount; projector heartbeat
+- [ ] 04-04-PLAN.md (Wave 3) — BroadcastBridge render-null component (subscribe-and-derive + dedup + request-state reply + heartbeat) + MeasurementOrchestrator setMeasurePhase wiring + 1.2s window-end hold + CalibrateButton calibrating/idle direct broadcasts
+- [ ] 04-05-PLAN.md (Wave 4) — HostView wiring (mount BroadcastBridge, ProjectorToolbar header, Reveal/Reset buttons) + manual verification checkpoint covering all 6 Phase 4 requirements end-to-end on deployed URL with second monitor
 
 ## Progress
 
@@ -80,5 +85,5 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 |-------|----------------|--------|-----------|
 | 1. Scaffold + State Layer | 3/3 | Complete    | 2026-05-05 |
 | 2. Audio Pipeline | 5/5 | Complete    | 2026-05-05 |
-| 3. Calibration + Measurement + Show Control | 4/6 | In Progress|  |
-| 4. Two-Surface Architecture | 0/TBD | Not started | - |
+| 3. Calibration + Measurement + Show Control | 6/6 | Complete    | 2026-05-05 |
+| 4. Two-Surface Architecture | 1/5 | In Progress|  |

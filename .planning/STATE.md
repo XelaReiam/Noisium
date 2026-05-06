@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-05-PLAN.md (CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator — 5 new components, 104 tests green)
-last_updated: "2026-05-05T22:11:45.978Z"
-last_activity: 2026-05-05 — Phase 2 Plan 5 complete (manual verification checkpoint approved — AGC confirmed, level indicator live, browser-specific error copy verified)
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-05-06T10:00:00.000Z"
+last_activity: 2026-05-06 — Phase 4 Plan 1 complete (MockBroadcastChannel + projector pure functions, 143 tests passing)
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 14
-  completed_plans: 13
-  percent: 50
+  completed_phases: 3
+  total_plans: 18
+  completed_plans: 15
+  percent: 78
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-05)
 
 **Core value:** The host can run a multi-demo applause contest end-to-end on a single laptop, with each demo's score captured fairly and the winner revealed with confidence.
-**Current focus:** Phase 2 — Audio Pipeline (Plan 02-01 complete 2026-05-05)
+**Current focus:** Phase 4 — Two-Surface Architecture (Phase 3 complete 2026-05-05)
 
 ## Current Position
 
-Phase: 2 of 4 (Audio Pipeline) — COMPLETE
-Plan: 5 of 5 in current phase (5 done, 0 remaining)
-Status: Plan 02-05 complete — manual verification checkpoint approved, all four ROADMAP success criteria confirmed PASS
-Last activity: 2026-05-05 — Phase 2 Plan 5 complete (manual verification checkpoint approved — AGC confirmed, level indicator live, browser-specific error copy verified)
+Phase: 4 of 4 (Two-Surface Architecture) — IN PROGRESS
+Plan: 1 of 5 in current phase (1 done, 4 remaining)
+Status: Plan 04-01 complete — MockBroadcastChannel jsdom polyfill + ProjectorMessage union + pure functions, 143 tests passing
+Last activity: 2026-05-06 — Phase 4 Plan 1 complete (MockBroadcastChannel + projector pure functions, 143 tests passing)
 
-Progress: [#####░░░░░] 50%
+Progress: [########░░] 75%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [#####░░░░░] 50%
 | Phase 03-calibration-measurement-show-control P03 | 3min | 2 tasks | 3 files |
 | Phase 03-calibration-measurement-show-control P04 | 2min | 3 tasks | 3 files |
 | Phase 03-calibration-measurement-show-control P05 | 3min | 4 tasks | 5 files |
+| Phase 03-calibration-measurement-show-control P06 | ~2h | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,12 @@ Recent decisions affecting current work:
 - [Phase 03-calibration-measurement-show-control]: Two useEffects in MeasurementOrchestrator: main run effect + abortMessage observer — necessary because engine resolves after store already updated abortMeasure
 - [Phase 03-calibration-measurement-show-control]: abortReasonRef tracking: sets 'device-change' before calling controller.abort() so store gets precise reason (engine always returns 'manual' for signal-triggered aborts)
 - [Phase 03-calibration-measurement-show-control]: CountdownOverlay renders AbortWarning in same DOM slot (both absolute inset-0) — orchestrator switches phase.kind; no unmount/remount flicker
+- [Phase 03-calibration-measurement-show-control P06]: AudioEngine promoted to module-level singleton — all consumers (MicPanel, CalibrateButton, MeasurementOrchestrator) share one permission-granted engine; per-component instantiation was silently breaking calibration and measurement
+- [Phase 03-calibration-measurement-show-control P06]: WindowPicker unselected text bumped from text-gray-500 to text-gray-700 for WCAG AA contrast (Lighthouse audit on deployed URL flagged insufficient ratio)
+- [Phase 03-calibration-measurement-show-control P06]: MeasurementOrchestrator mounted as last child of relative-positioned main so absolute inset-0 overlay covers exactly the main area; PersistenceBanner above main stays visible during measurement
+- [Phase 04-two-surface-architecture P01]: MockBroadcastChannel added to setup.ts globalThis (not per-file vi.mock) — jsdom 29.1.1 has no BroadcastChannel; global assignment covers all transitively importing test files
+- [Phase 04-two-surface-architecture P01]: reveal-buildup kept in ProjectorMessage union as projector-internal-only variant — host invariant test asserts deriveProjectorMessage never returns it (04-RESEARCH.md Pitfall 4)
+- [Phase 04-two-surface-architecture P01]: ProjectorMessageState interface decoupled from useAppStore — avoids circular import when Plan 02 adds revealWinner using deriveWinner return type; enables pure synchronous testing
 
 ### Pending Todos
 
@@ -118,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-05T22:11:45.975Z
-Stopped at: Completed 03-05-PLAN.md (CalibrateButton + CountdownOverlay + AbortWarning + MeasurementAbortGuard + MeasurementOrchestrator — 5 new components, 104 tests green)
-Resume file: None
+Last session: 2026-05-05T23:14:57.997Z
+Stopped at: Phase 4 context gathered
+Resume file: .planning/phases/04-two-surface-architecture/04-CONTEXT.md

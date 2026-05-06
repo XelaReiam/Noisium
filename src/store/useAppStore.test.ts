@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useAppStore } from './useAppStore';
 
 // Reset store between tests by setting all fields back to defaults
@@ -25,6 +25,11 @@ beforeEach(() => {
     abortedDemoId: null,
     abortMessage: null,
     redoConfirmDemoId: null,
+    // Phase 4 transient
+    measurePhase: 'idle',
+    revealActive: false,
+    revealWinner: null,
+    projectorConnected: false,
   });
 });
 
@@ -356,5 +361,205 @@ describe('useAppStore — Phase 3 clearSession reset', () => {
     expect(s.abortedDemoId).toBeNull();
     expect(s.abortMessage).toBeNull();
     expect(s.redoConfirmDemoId).toBeNull();
+  });
+});
+
+// ============================================================================
+// Phase 4 tests
+// ============================================================================
+
+describe('Phase 4: store transient defaults', () => {
+  it('defaults measurePhase to "idle"', () => {
+    expect(useAppStore.getState().measurePhase).toBe('idle');
+  });
+
+  it('defaults revealActive to false and revealWinner to null', () => {
+    expect(useAppStore.getState().revealActive).toBe(false);
+    expect(useAppStore.getState().revealWinner).toBeNull();
+  });
+
+  it('defaults projectorConnected to false', () => {
+    expect(useAppStore.getState().projectorConnected).toBe(false);
+  });
+});
+
+describe('Phase 4: setMeasurePhase', () => {
+  it.each(['countdown', 'measuring', 'window-end', 'idle'] as const)(
+    'sets measurePhase to %s',
+    (phase) => {
+      useAppStore.getState().setMeasurePhase(phase);
+      expect(useAppStore.getState().measurePhase).toBe(phase);
+    },
+  );
+});
+
+describe('Phase 4: triggerReveal / resetReveal', () => {
+  it('is a no-op when no demos are measured', () => {
+    useAppStore.getState().addDemo('Alpha');
+    useAppStore.getState().triggerReveal();
+    expect(useAppStore.getState().revealActive).toBe(false);
+    expect(useAppStore.getState().revealWinner).toBeNull();
+  });
+
+  it('sets revealActive=true and the winner name when one demo is measured', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+    useAppStore.getState().setCalibrationAmbient(-50);
+    useAppStore.getState().completeMeasure(id, -38);
+    useAppStore.getState().triggerReveal();
+    expect(useAppStore.getState().revealActive).toBe(true);
+    expect(useAppStore.getState().revealWinner).toEqual({ name: 'Alpha' });
+  });
+
+  it('picks the higher delta when two demos differ', () => {
+    useAppStore.getState().addDemo('Alpha');
+    useAppStore.getState().addDemo('Bravo');
+    const [a, b] = useAppStore.getState().demos.map((d) => d.id);
+    useAppStore.getState().setCalibrationAmbient(-50);
+    useAppStore.getState().completeMeasure(a, -40); // delta = 10
+    useAppStore.getState().completeMeasure(b, -38); // delta = 12 — winner
+    useAppStore.getState().triggerReveal();
+    expect(useAppStore.getState().revealWinner).toEqual({ name: 'Bravo' });
+  });
+
+  it('produces a tie array when two demos have equal deltas', () => {
+    useAppStore.getState().addDemo('Alpha');
+    useAppStore.getState().addDemo('Bravo');
+    const [a, b] = useAppStore.getState().demos.map((d) => d.id);
+    useAppStore.getState().setCalibrationAmbient(-50);
+    useAppStore.getState().completeMeasure(a, -40);
+    useAppStore.getState().completeMeasure(b, -40);
+    useAppStore.getState().triggerReveal();
+    const winner = useAppStore.getState().revealWinner;
+    expect(winner).toEqual({ names: expect.arrayContaining(['Alpha', 'Bravo']) });
+  });
+
+  it('excludes skipped demos when picking the winner', () => {
+    useAppStore.getState().addDemo('Alpha');
+    useAppStore.getState().addDemo('Bravo');
+    const [a, b] = useAppStore.getState().demos.map((d) => d.id);
+    useAppStore.getState().setCalibrationAmbient(-50);
+    useAppStore.getState().completeMeasure(a, -38); // higher
+    useAppStore.getState().completeMeasure(b, -42);
+    useAppStore.getState().skipDemo(a); // skip the higher
+    useAppStore.getState().triggerReveal();
+    expect(useAppStore.getState().revealWinner).toEqual({ name: 'Bravo' });
+  });
+
+  it('resetReveal clears both fields', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+    useAppStore.getState().setCalibrationAmbient(-50);
+    useAppStore.getState().completeMeasure(id, -38);
+    useAppStore.getState().triggerReveal();
+    expect(useAppStore.getState().revealActive).toBe(true);
+    useAppStore.getState().resetReveal();
+    expect(useAppStore.getState().revealActive).toBe(false);
+    expect(useAppStore.getState().revealWinner).toBeNull();
+  });
+});
+
+describe('Phase 4: setProjectorConnected and refreshProjectorHeartbeat', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('setProjectorConnected toggles the field', () => {
+    useAppStore.getState().setProjectorConnected(true);
+    expect(useAppStore.getState().projectorConnected).toBe(true);
+    useAppStore.getState().setProjectorConnected(false);
+    expect(useAppStore.getState().projectorConnected).toBe(false);
+  });
+
+  it('refreshProjectorHeartbeat sets connected immediately', () => {
+    useAppStore.getState().refreshProjectorHeartbeat();
+    expect(useAppStore.getState().projectorConnected).toBe(true);
+  });
+
+  it('clears connected after 5000ms with no further heartbeat', () => {
+    useAppStore.getState().refreshProjectorHeartbeat();
+    vi.advanceTimersByTime(4999);
+    expect(useAppStore.getState().projectorConnected).toBe(true);
+    vi.advanceTimersByTime(2);
+    expect(useAppStore.getState().projectorConnected).toBe(false);
+  });
+
+  it('resets the staleness timer when called again', () => {
+    useAppStore.getState().refreshProjectorHeartbeat();
+    vi.advanceTimersByTime(3000);
+    useAppStore.getState().refreshProjectorHeartbeat(); // resets the timer
+    vi.advanceTimersByTime(3000); // 6s total but only 3s since last refresh
+    expect(useAppStore.getState().projectorConnected).toBe(true);
+    vi.advanceTimersByTime(2001);
+    expect(useAppStore.getState().projectorConnected).toBe(false);
+  });
+});
+
+describe('Phase 4: measurePhase consistency on abort/complete', () => {
+  it('abortMeasure resets measurePhase to idle', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+    useAppStore.getState().startMeasure(id);
+    useAppStore.getState().setMeasurePhase('measuring');
+    useAppStore.getState().abortMeasure(id, 'manual');
+    expect(useAppStore.getState().measurePhase).toBe('idle');
+  });
+
+  it('completeMeasure resets measurePhase to idle', () => {
+    useAppStore.getState().addDemo('Alpha');
+    const id = useAppStore.getState().demos[0].id;
+    useAppStore.getState().setCalibrationAmbient(-50);
+    useAppStore.getState().startMeasure(id);
+    useAppStore.getState().setMeasurePhase('measuring');
+    useAppStore.getState().completeMeasure(id, -38);
+    expect(useAppStore.getState().measurePhase).toBe('idle');
+  });
+});
+
+describe('Phase 4: clearSession resets transients', () => {
+  it('clears every Phase 4 transient', () => {
+    useAppStore.getState().setMeasurePhase('measuring');
+    useAppStore.getState().setProjectorConnected(true);
+    // Force revealActive without going through triggerReveal so the test is direct
+    useAppStore.setState({ revealActive: true, revealWinner: { name: 'X' } });
+    useAppStore.getState().clearSession();
+    const s = useAppStore.getState();
+    expect(s.measurePhase).toBe('idle');
+    expect(s.revealActive).toBe(false);
+    expect(s.revealWinner).toBeNull();
+    expect(s.projectorConnected).toBe(false);
+  });
+});
+
+describe('Phase 4: partialize invariant unchanged', () => {
+  it('persists ONLY windowSeconds, sessionDate, demos, scores, skippedDemoIds', () => {
+    // Set Phase 4 transients to non-defaults to be certain they don't bleed.
+    useAppStore.getState().setMeasurePhase('measuring');
+    useAppStore.getState().setProjectorConnected(true);
+    useAppStore.setState({ revealActive: true, revealWinner: { name: 'X' } });
+    // Add a demo to ensure there's something to persist.
+    useAppStore.getState().addDemo('Alpha');
+
+    // Wait for the persist middleware to flush. Zustand persist writes
+    // synchronously by default; reading is immediate.
+    const raw = localStorage.getItem('noisium:state');
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    const persistedKeys = Object.keys(parsed.state).sort();
+    expect(persistedKeys).toEqual([
+      'demos',
+      'scores',
+      'sessionDate',
+      'skippedDemoIds',
+      'windowSeconds',
+    ]);
+    // Explicitly confirm the Phase 4 fields are absent
+    expect(parsed.state).not.toHaveProperty('measurePhase');
+    expect(parsed.state).not.toHaveProperty('revealActive');
+    expect(parsed.state).not.toHaveProperty('revealWinner');
+    expect(parsed.state).not.toHaveProperty('projectorConnected');
   });
 });

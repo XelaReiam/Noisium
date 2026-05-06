@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { MicPermission } from '../lib/audioEngine';
 import { computeDelta, type Score } from '../lib/measurement';
+import { deriveWinner } from '../lib/projector';
 
 export type { MicPermission };
 export type WindowSeconds = 5 | 8 | 10;
@@ -44,6 +45,13 @@ export interface AppState {
   abortMessage: string | null;
   redoConfirmDemoId: string | null;
 
+  // Phase 4 transient fields — projector mirroring state
+  // None of these are persisted (partialize unchanged)
+  measurePhase: 'idle' | 'countdown' | 'measuring' | 'window-end';
+  revealActive: boolean;
+  revealWinner: { name: string } | { names: string[] } | null;
+  projectorConnected: boolean;
+
   // -- Actions ----
   setWindowSeconds: (s: WindowSeconds) => void;
   setSessionDate: (date: string) => void;
@@ -78,11 +86,23 @@ export interface AppState {
   confirmRedo: (id: string) => void;
 
   clearSession: () => void;
+
+  // Phase 4 actions
+  setMeasurePhase: (phase: 'idle' | 'countdown' | 'measuring' | 'window-end') => void;
+  triggerReveal: () => void;
+  resetReveal: () => void;
+  setProjectorConnected: (connected: boolean) => void;
+  refreshProjectorHeartbeat: () => void;
 }
 
 function todayISO(): string {
   return new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
 }
+
+// Module-level: holds the pending heartbeat-staleness timer so we can clear it
+// from inside refreshProjectorHeartbeat without storing the ID in Zustand
+// (storing setTimeout IDs in store state is unusual and harder to reason about).
+let _projectorStaleTimer: number | null = null;
 
 function abortReasonToMessage(reason: 'state-change' | 'device-change' | 'manual'): string {
   // Single source of truth for the abort warning copy. Plans 03-05's
@@ -125,6 +145,12 @@ export const useAppStore = create<AppState>()(
       abortedDemoId: null,
       abortMessage: null,
       redoConfirmDemoId: null,
+
+      // Phase 4 transient defaults
+      measurePhase: 'idle',
+      revealActive: false,
+      revealWinner: null,
+      projectorConnected: false,
 
       // -- Phase 1 setters ----
       setWindowSeconds: (s) => set({ windowSeconds: s }),
@@ -204,6 +230,7 @@ export const useAppStore = create<AppState>()(
             // A measured demo is no longer skipped.
             skippedDemoIds: state.skippedDemoIds.filter((sid) => sid !== demoId),
             measuringDemoId: null,
+            measurePhase: 'idle', // Phase 4: reset measurePhase on completion
           };
         }),
 
@@ -212,6 +239,7 @@ export const useAppStore = create<AppState>()(
           measuringDemoId: null,
           abortedDemoId: demoId,
           abortMessage: abortReasonToMessage(reason),
+          measurePhase: 'idle', // Phase 4: reset measurePhase on abort
         }),
 
       clearAbort: () =>
@@ -246,8 +274,52 @@ export const useAppStore = create<AppState>()(
           };
         }),
 
+      // -- Phase 4 actions ----
+      setMeasurePhase: (phase) => set({ measurePhase: phase }),
+
+      triggerReveal: () =>
+        set((state) => {
+          const winner = deriveWinner(state.demos, state.scores, state.skippedDemoIds);
+          if (winner === null) {
+            // No measured non-skipped demos — no-op (HostView gating should
+            // prevent this path, but the store is defensive).
+            return state;
+          }
+          return {
+            revealActive: true,
+            revealWinner: winner,
+          };
+        }),
+
+      resetReveal: () =>
+        set({
+          revealActive: false,
+          revealWinner: null,
+        }),
+
+      setProjectorConnected: (connected) => set({ projectorConnected: connected }),
+
+      refreshProjectorHeartbeat: () => {
+        if (_projectorStaleTimer !== null) {
+          clearTimeout(_projectorStaleTimer);
+          _projectorStaleTimer = null;
+        }
+        // Set timer FIRST, then update state — the timer ID lives module-side.
+        _projectorStaleTimer = window.setTimeout(() => {
+          _projectorStaleTimer = null;
+          useAppStore.getState().setProjectorConnected(false);
+        }, 5000);
+        set({ projectorConnected: true });
+      },
+
       // -- clearSession (extends Phase 2's reset) ----
-      clearSession: () =>
+      clearSession: () => {
+        // Clear the stale heartbeat timer to prevent a stale timer from firing
+        // after Start-fresh and setting projectorConnected=false spuriously.
+        if (_projectorStaleTimer !== null) {
+          clearTimeout(_projectorStaleTimer);
+          _projectorStaleTimer = null;
+        }
         set({
           // Phase 1
           windowSeconds: 8,
@@ -266,7 +338,13 @@ export const useAppStore = create<AppState>()(
           abortedDemoId: null,
           abortMessage: null,
           redoConfirmDemoId: null,
-        }),
+          // Phase 4 transient
+          measurePhase: 'idle',
+          revealActive: false,
+          revealWinner: null,
+          projectorConnected: false,
+        });
+      },
     }),
     {
       name: 'noisium:state',
@@ -274,6 +352,7 @@ export const useAppStore = create<AppState>()(
       // Phase 3: partialize updated to include the three new persisted fields.
       // Transient fields (calibrationAmbientDb, measuringDemoId, abortedDemoId,
       // abortMessage, redoConfirmDemoId, and all Phase 1+2 transients) remain excluded.
+      // Phase 4: partialize unchanged — every Phase 4 field is transient.
       partialize: (state) => ({
         windowSeconds: state.windowSeconds,
         sessionDate: state.sessionDate,
