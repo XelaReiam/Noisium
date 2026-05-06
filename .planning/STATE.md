@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-05-06T08:05:52.097Z"
-last_activity: 2026-05-06 — Phase 4 Plan 1 complete (MockBroadcastChannel + projector pure functions, 143 tests passing)
+status: in_progress
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-05-06T10:25:00.000Z"
+last_activity: 2026-05-06 — Phase 4 Plan 4 complete (BroadcastBridge + MeasurementOrchestrator wiring + CalibrateButton broadcasts, 192 tests passing)
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 19
-  completed_plans: 16
-  percent: 75
+  completed_plans: 17
+  percent: 89
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-05)
 ## Current Position
 
 Phase: 4 of 4 (Two-Surface Architecture) — IN PROGRESS
-Plan: 1 of 5 in current phase (1 done, 4 remaining)
-Status: Plan 04-01 complete — MockBroadcastChannel jsdom polyfill + ProjectorMessage union + pure functions, 143 tests passing
-Last activity: 2026-05-06 — Phase 4 Plan 1 complete (MockBroadcastChannel + projector pure functions, 143 tests passing)
+Plan: 4 of 5 in current phase (4 done, 1 remaining)
+Status: Plan 04-04 complete — BroadcastBridge render-null relay + MeasurementOrchestrator wiring + CalibrateButton direct broadcasts, 192 tests passing
+Last activity: 2026-05-06 — Phase 4 Plan 4 complete (BroadcastBridge + MeasurementOrchestrator wiring + CalibrateButton broadcasts, 192 tests passing)
 
-Progress: [########░░] 75%
+Progress: [#########░] 89%
 
 ## Performance Metrics
 
@@ -116,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 04-two-surface-architecture P01]: ProjectorMessageState interface decoupled from useAppStore — avoids circular import when Plan 02 adds revealWinner using deriveWinner return type; enables pure synchronous testing
 - [Phase 04-two-surface-architecture]: Staleness timer (_projectorStaleTimer) lives at module scope — storing setTimeout IDs in Zustand state is unusual; module-level gives deterministic clearTimeout from refreshProjectorHeartbeat and clearSession
 - [Phase 04-two-surface-architecture]: measurePhase resets inside completeMeasure (not separate orchestrator action) — keeps store internally consistent; orchestrator handles window-end display tick before calling completeMeasure
+- [Phase 04-two-surface-architecture P04]: BroadcastBridge uses JSON.stringify comparison of last sent message for deduplication — prevents identical consecutive store updates from broadcasting unchanged ProjectorMessage
+- [Phase 04-two-surface-architecture P04]: CalibrateButton broadcasts calibrating/idle directly to channel (not via store+BroadcastBridge) — calibration is a UI-owned atomic flow with no Zustand transient field needed
+- [Phase 04-two-surface-architecture P04]: MeasurementOrchestrator defers completeMeasure by 1200ms (WINDOW_END_HOLD_MS) after setMeasurePhase('window-end') — BroadcastBridge broadcasts window-end; projector's own 1200ms timer runs harmoniously before idle arrives
 
 ### Pending Todos
 
@@ -128,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-06T08:05:52.091Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-05-06T10:25:00.000Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None

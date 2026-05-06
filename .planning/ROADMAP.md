@@ -72,11 +72,11 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
   3. The projector never displays raw per-demo scores; BroadcastChannel messages carry only `phase`, `currentDemoName`, `countdownSeconds`, and `winner`
   4. The projector shows a suspense screen (no live dB meter) while measurement is in progress
   5. After all demos are measured, the host triggers the reveal and the projector displays the winner only — no leaderboard, no other scores
-**Plans:** 2/5 plans executed
-- [ ] 04-01-PLAN.md (Wave 1) — Wave 0: MockBroadcastChannel test mock + src/lib/projector.ts pure functions (deriveWinner, deriveProjectorMessage, canRevealWinner) + BroadcastChannel singleton
-- [ ] 04-02-PLAN.md (Wave 2, parallel with 04-03) — Store extension: Phase 4 transients (measurePhase, revealActive/revealWinner, projectorConnected) + actions (triggerReveal, resetReveal, refreshProjectorHeartbeat) + clearSession update; partialize unchanged
-- [ ] 04-03-PLAN.md (Wave 2, parallel with 04-02) — ProjectorView + 4 sub-components (Idle, Countdown, Suspense, Reveal); replaces ProjectorPlaceholder; locally-animated buildup→reveal + rAF progress bar + window-end auto-fade; PROJ-04 request-state on mount; projector heartbeat
-- [ ] 04-04-PLAN.md (Wave 3) — BroadcastBridge render-null component (subscribe-and-derive + dedup + request-state reply + heartbeat) + MeasurementOrchestrator setMeasurePhase wiring + 1.2s window-end hold + CalibrateButton calibrating/idle direct broadcasts
+**Plans:** 4/5 plans executed
+- [x] 04-01-PLAN.md (Wave 1) — Wave 0: MockBroadcastChannel test mock + src/lib/projector.ts pure functions (deriveWinner, deriveProjectorMessage, canRevealWinner) + BroadcastChannel singleton
+- [x] 04-02-PLAN.md (Wave 2, parallel with 04-03) — Store extension: Phase 4 transients (measurePhase, revealActive/revealWinner, projectorConnected) + actions (triggerReveal, resetReveal, refreshProjectorHeartbeat) + clearSession update; partialize unchanged
+- [x] 04-03-PLAN.md (Wave 2, parallel with 04-02) — ProjectorView + 4 sub-components (Idle, Countdown, Suspense, Reveal); replaces ProjectorPlaceholder; locally-animated buildup→reveal + rAF progress bar + window-end auto-fade; PROJ-04 request-state on mount; projector heartbeat
+- [x] 04-04-PLAN.md (Wave 3) — BroadcastBridge render-null component (subscribe-and-derive + dedup + request-state reply + heartbeat) + MeasurementOrchestrator setMeasurePhase wiring + 1.2s window-end hold + CalibrateButton calibrating/idle direct broadcasts
 - [ ] 04-05-PLAN.md (Wave 4) — HostView wiring (mount BroadcastBridge, ProjectorToolbar header, Reveal/Reset buttons) + manual verification checkpoint covering all 6 Phase 4 requirements end-to-end on deployed URL with second monitor
 
 ## Progress
@@ -86,4 +86,4 @@ Four phases deliver the applause meter in 3 days. Phase 1 lays the scaffold, sta
 | 1. Scaffold + State Layer | 3/3 | Complete    | 2026-05-05 |
 | 2. Audio Pipeline | 5/5 | Complete    | 2026-05-05 |
 | 3. Calibration + Measurement + Show Control | 6/6 | Complete    | 2026-05-05 |
-| 4. Two-Surface Architecture | 2/5 | In Progress|  |
+| 4. Two-Surface Architecture | 4/5 | In Progress|  |
