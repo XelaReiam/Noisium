@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore';
 import { useAudioEngine } from '../hooks/useAudioEngine';
 import { CountdownOverlay } from './CountdownOverlay';
 import { MeasurementAbortGuard } from './MeasurementAbortGuard';
+import { getNoisiumChannel } from '../lib/broadcastChannel';
 
 type OverlayPhase =
   | { kind: 'countdown'; value: 3 | 2 | 1 }
@@ -39,6 +40,7 @@ export function MeasurementOrchestrator() {
   const abortMeasure = useAppStore((s) => s.abortMeasure);
   const clearAbort = useAppStore((s) => s.clearAbort);
   const startMeasure = useAppStore((s) => s.startMeasure);
+  const setMeasurePhase = useAppStore((s) => s.setMeasurePhase);
 
   const controllerRef = useRef<AbortController | null>(null);
   // Tracks why the controller was aborted so we can map 'manual' from the engine
@@ -71,6 +73,8 @@ export function MeasurementOrchestrator() {
     abortReasonRef.current = null;
 
     // Phase 1: 3-2-1 countdown (3 seconds total)
+    // Broadcast countdown phase to projector via BroadcastBridge
+    setMeasurePhase('countdown');
     setOverlayPhase({ kind: 'countdown', value: 3 });
     timeoutsRef.current.push(
       window.setTimeout(() => setOverlayPhase({ kind: 'countdown', value: 2 }), 1000),
@@ -84,6 +88,8 @@ export function MeasurementOrchestrator() {
       window.setTimeout(async () => {
         if (cancelled) return;
         // Phase 2: capture window
+        // Broadcast measuring phase to projector
+        setMeasurePhase('measuring');
         setOverlayPhase({ kind: 'measuring', demoName });
         try {
           if (!engineRef.current) {
@@ -96,9 +102,25 @@ export function MeasurementOrchestrator() {
           );
           if (cancelled) return;
           if (result.aborted === false) {
-            completeMeasure(measuringDemoId, result.avgDbFs);
-            // Clear overlay — the store update unsets measuringDemoId
-            setOverlayPhase(null);
+            // Briefly hold in window-end phase so the projector shows "Thank you."
+            // BroadcastBridge derives { phase: 'window-end' } from this state and
+            // posts it. After WINDOW_END_HOLD_MS, we commit the score, which
+            // moves the store to measurePhase='idle' and triggers the idle
+            // broadcast. The projector's own window-end → idle transition (also
+            // ~1200ms) lands harmoniously.
+            const demoNameForWindowEnd = demoName;
+            setMeasurePhase('window-end');
+            // Also broadcast directly so a projector that opens mid-window-end
+            // receives the right message even if BroadcastBridge's dedup skips it
+            getNoisiumChannel().postMessage({ phase: 'window-end', demoName: demoNameForWindowEnd });
+            const WINDOW_END_HOLD_MS = 1200;
+            timeoutsRef.current.push(
+              window.setTimeout(() => {
+                if (cancelled) return;
+                completeMeasure(measuringDemoId, result.avgDbFs);
+                setOverlayPhase(null);
+              }, WINDOW_END_HOLD_MS),
+            );
           } else {
             // The engine reports 'manual' when our AbortController fires.
             // Map to the more specific reason from abortReasonRef if set.
