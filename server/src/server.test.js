@@ -45,4 +45,10 @@ describe('createNoisiumServer', () => {
     serverResult = await createNoisiumServer(distDir, 5001);
     expect(serverResult.port).toBe(5001);
   });
+
+  it('listens on 0.0.0.0 (all interfaces), not 127.0.0.1 only', async () => {
+    distDir = await makeTempDist();
+    serverResult = await createNoisiumServer(distDir, 0);
+    expect(serverResult.server.address().address).toBe('0.0.0.0');
+  });
 });

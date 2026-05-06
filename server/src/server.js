@@ -17,7 +17,7 @@ export function createNoisiumServer(distDir, port) {
     server.on('error', reject);
     wss.on('error', reject);
 
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, '0.0.0.0', () => {
       resolve({ server, wss, port: server.address().port });
     });
   });
