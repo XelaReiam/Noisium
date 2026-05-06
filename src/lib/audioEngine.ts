@@ -273,13 +273,13 @@ export class AudioEngine {
       const intervalId = setInterval(() => {
         if (finished) return;
         analyser.getFloatTimeDomainData(buffer);
-        const rms = computeRms(buffer);
-        samples.push(dbFsFromRms(rms));
+        samples.push(computeRms(buffer));
         if (performance.now() - startMs >= targetMs) {
-          const avg =
+          const avgRms =
             samples.length > 0
               ? samples.reduce((a, b) => a + b, 0) / samples.length
-              : -100; // defensive — should never happen for windowSeconds > 0
+              : 0;
+          const avg = dbFsFromRms(avgRms);
           finish({
             aborted: false,
             avgDbFs: avg,
